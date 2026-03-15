@@ -1,0 +1,852 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gruppenserien-Report V21 – Managementübersicht</title>
+<style>
+:root{
+  --blue:#123b66; --blue2:#204d7f; --gold:#d4af37; --ink:#1d1d1f; --muted:#667085;
+  --line:#cfd7e2; --green:#138a36; --red:#d92d20; --amber:#8a6b00;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:linear-gradient(180deg,#f7f9fc 0%,#eff3f8 100%)}
+.wrap{max-width:1880px;margin:0 auto;padding:18px}
+header{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;border-radius:20px;padding:18px 22px;box-shadow:0 14px 28px rgba(11,42,74,.18);margin-bottom:16px}
+h1{margin:0 0 6px 0;font-size:28px}
+.sub{font-size:13px;opacity:.94}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}
+.btn{appearance:none;border:0;cursor:pointer;padding:10px 14px;border-radius:12px;font-weight:900;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;box-shadow:0 10px 18px rgba(11,42,74,.14)}
+.btn.secondary{background:#fff;color:var(--blue);border:1px solid rgba(11,42,74,.18)}
+.btn.gold{background:linear-gradient(135deg,#cda426,#e3c35c);color:#24354c}
+.filebox,.ctrlbox,.mergebox{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 12px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 18px rgba(0,0,0,.05)}
+.ctrlbox label{font-weight:800;color:var(--blue)}
+.ctrlbox select{padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;min-width:160px}
+.info{background:#fff8e6;border:1px solid #ead8a0;color:#7b5f00;padding:10px 12px;border-radius:14px;margin-bottom:14px;font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 16px;box-shadow:0 10px 22px rgba(0,0,0,.05)}
+.kpi .t{font-size:12px;color:var(--muted);font-weight:700}
+.kpi .v{font-size:24px;font-weight:900;color:var(--blue);margin-top:6px}
+.kpi .s{font-size:12px;color:var(--muted);margin-top:4px}
+.section{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 10px 24px rgba(0,0,0,.05);overflow:hidden;margin-bottom:16px}
+.section-header{padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:linear-gradient(90deg,rgba(11,42,74,.08),rgba(212,175,55,.10))}
+.section-title{font-size:18px;font-weight:900;color:var(--blue)}
+.section-actions{display:flex;gap:8px;flex-wrap:wrap}
+.content{padding:14px 16px}
+.hidden{display:none}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px;background:#fff}
+table{width:100%;border-collapse:collapse}
+th,td{border:1px solid var(--line);padding:8px 9px;text-align:center;white-space:nowrap;font-size:13px}
+th{background:#eef3f9;color:var(--blue);font-weight:900}
+.left{text-align:left}
+.small{font-size:12px;color:var(--muted)}
+.mono{font-variant-numeric:tabular-nums}
+.good{color:var(--green);font-weight:900}
+.bad{color:var(--red);font-weight:900}
+.corp{display:inline-block;margin-top:6px;padding:3px 8px;border-radius:999px;background:rgba(212,175,55,.16);color:var(--amber);font-size:11px;font-weight:900}
+.month-stack{display:flex;flex-direction:column;gap:22px}
+.month-card{border:1px solid var(--line);border-radius:26px;overflow:hidden;background:#fff;box-shadow:0 10px 24px rgba(0,0,0,.05)}
+.month-head{background:linear-gradient(90deg,#123b66,#204d7f);color:#fff;border-bottom:3px solid var(--gold);padding:16px 18px;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.month-title{font-size:20px;font-weight:900;line-height:1.1}
+.month-sub{margin-top:4px;font-size:12px;font-weight:700;text-decoration:underline;text-underline-offset:2px}
+.month-chips{display:flex;gap:10px;flex-wrap:wrap}
+.month-chip{color:#ffcf33;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:10px 14px;font-weight:900;white-space:nowrap}
+.matrix{width:100%;table-layout:fixed}
+.matrix th,.matrix td{font-size:11px;padding:8px 5px}
+.matrix thead tr:first-child th{background:linear-gradient(180deg,#ede7d5,#e4decd);font-size:12px}
+.matrix .seriehead{background:#e9e1e6 !important;width:165px}
+.matrix .kpi-cur{background:#d7e3f2}
+.matrix .kpi-ly{background:#e3e3e3}
+.matrix .kpi-d{background:#eadede}
+.matrix .kpi-p{background:#dde8df}
+.series-cell{text-align:left;font-weight:900;color:#123b66;white-space:normal;line-height:1.15}
+.series-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.series-card{border:1px solid var(--line);border-radius:20px;background:#fff;overflow:hidden;box-shadow:0 10px 24px rgba(0,0,0,.05)}
+.series-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.year-toggle{appearance:none;border:1px solid rgba(18,59,102,.18);background:#fff;color:var(--blue);padding:8px 10px;border-radius:10px;font-weight:800;cursor:pointer}
+.delete-series-btn{appearance:none;border:1px solid rgba(217,45,32,.20);background:#fff;color:#b42318;padding:8px 10px;border-radius:10px;font-weight:800;cursor:pointer}
+.series-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid var(--line)}
+.series-title{font-size:18px;font-weight:900;color:var(--blue)}
+.series-sub{margin-top:4px;font-size:12px;color:var(--muted)}
+.series-mini{width:100%;table-layout:fixed}
+.series-mini th,.series-mini td{font-size:11px;padding:7px 4px;border:1.5px solid #b8c6d8}
+.series-mini .monthcol{width:94px}
+.series-mini .widecol{width:108px}
+.series-mini .narrowcol{width:90px}
+.series-mini .yearbreak td{
+  font-weight:900;
+  color:var(--blue);
+  background:#f6f8fb !important;
+  border-top:3px solid #d8e0ea;
+  text-align:left;
+}
+.profile-box{padding:10px 12px;border-top:1px solid var(--line);background:#fafcff}
+.profile-year-row{
+  display:grid;
+  grid-template-columns:110px repeat(5,minmax(90px,1fr));
+  gap:8px;
+  align-items:end;
+  margin-bottom:10px;
+  padding:10px;
+  border-radius:12px;
+  border:1px solid rgba(0,0,0,.06);
+}
+.profile-year-label{
+  font-weight:900;
+  color:var(--blue);
+}
+.profile-year-row label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px}
+.profile-year-row input{width:100%;padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:#fff}
+@media (max-width:1100px){.series-grid{grid-template-columns:1fr}}
+@media print{
+  body{background:#fff}.toolbar,.section-actions,.info,.ctrlbox{display:none !important}.wrap{max-width:none;padding:0}
+  header{border-radius:0;box-shadow:none}.section{border:0;box-shadow:none}.month-card,.series-card{break-inside:avoid;box-shadow:none}
+  @page{size:A4 landscape;margin:8mm}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Gruppenserien-Report</h1>
+    <div class="sub">V21 • Managementübersicht für Gruppenserien • stärkere Serienfarben • Vorjahr einklappbar • Serie löschen • Code 1:1 kopieren</div>
+  </header>
+
+  <div class="toolbar">
+    <button class="btn" onclick="toggleSection('pivotWrap')">Pivot öffnen / schließen</button>
+    <button class="btn" onclick="toggleSection('monthlyWrap')">Monatsvergleich öffnen / schließen</button>
+    <button class="btn" onclick="toggleSection('top3Wrap')">Top 3 Gruppen öffnen / schließen</button>
+    <button class="btn secondary" onclick="toggleSection('seriesWrap')">Management-Ansicht pro Serie öffnen / schließen</button>
+    <button class="btn gold" onclick="printOnly('pivotPrint','Pivot Übersicht')">Pivot drucken</button>
+    <button class="btn gold" onclick="printOnly('monthlyPrint','Monatsvergleich')">Monatsvergleich drucken</button>
+    <button class="btn gold" onclick="printOnly('seriesPrint','Management-Ansicht pro Serie')">Serienansicht drucken</button>
+    <button class="btn secondary" onclick="clearDashboard()">Tabelle leeren</button>
+    <button class="btn secondary" onclick="copyFullCodeWithState()">Code 1:1 kopieren</button>
+    <div class="filebox">
+      <strong>Import:</strong>
+      <input id="fileInput" type="file" accept=".txt,.csv,.tsv" multiple>
+      <span class="small">Hotely TXT / TSV</span>
+    </div>
+  </div>
+
+  <div class="ctrlbox">
+    <label for="pivotMetric">Kennzahl</label>
+    <select id="pivotMetric">
+      <option value="roomRevenue">Room Revenue</option>
+      <option value="roomNights">Room Nights</option>
+      <option value="fbRevenue">F&amp;B Revenue</option>
+      <option value="fbpp">F&amp;B / Guest</option>
+      <option value="blockAdr">Block ADR</option>
+    </select>
+
+    <label for="pivotYearMode">Jahr</label>
+    <select id="pivotYearMode">
+      <option value="current">Aktuell</option>
+      <option value="ly">LY</option>
+      <option value="diff">Differenz</option>
+      <option value="pct">Differenz %</option>
+    </select>
+
+    <label for="pivotViewMode">Ansicht</label>
+    <select id="pivotViewMode">
+      <option value="monthsSeries">Monate × Serien</option>
+      <option value="seriesMonths">Serien × Monate</option>
+    </select>
+
+    <label for="pivotSeriesMode">Serie berechnen</label>
+    <select id="pivotSeriesMode">
+      <option value="all">Alle Serien</option>
+    </select>
+  </div>
+
+  <div class="mergebox">
+    <label for="mergeSeriesA"><strong>CorporateIDs verschmelzen:</strong></label>
+    <select id="mergeSeriesA"><option value="">CorporateID A</option></select>
+    <select id="mergeSeriesB"><option value="">CorporateID B</option></select>
+    <button class="btn secondary" onclick="mergeSelectedCorporateIds()">Verschmelzen</button>
+  </div>
+
+  <div class="info">
+    Neu: Nach dem Seriennamen sind die Jahres-Summen 2026 und 2025 in getrennten Zeilen sichtbar. Zusätzlich kannst du zwei verschiedene CorporateIDs zu einer Übersicht verschmelzen. Alles andere bleibt 1:1.
+  </div>
+
+  <div class="grid">
+    <div class="kpi"><div class="t">Serien</div><div class="v" id="kpiSeries">0</div><div class="s">aktive Gruppen</div></div>
+    <div class="kpi"><div class="t">Monate mit Daten</div><div class="v" id="kpiMonths">0</div><div class="s">Jan–Dez</div></div>
+    <div class="kpi"><div class="t">Room Revenue</div><div class="v mono" id="kpiRoomRevenue">0.00</div><div class="s">aktuell gesamt</div></div>
+    <div class="kpi"><div class="t">Room Nights</div><div class="v mono" id="kpiRoomNights">0</div><div class="s">aktuell gesamt</div></div>
+    <div class="kpi"><div class="t">F&amp;B Revenue</div><div class="v mono" id="kpiFBRevenue">0.00</div><div class="s">aktuell gesamt</div></div>
+    <div class="kpi"><div class="t">Block ADR</div><div class="v mono" id="kpiAdr">0.00</div><div class="s">aus CF_BLK_ADR</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">Pivot Übersicht</div>
+      <div class="section-actions">
+        <button class="btn secondary" onclick="toggleSection('pivotWrap')">öffnen / schließen</button>
+        <button class="btn secondary" onclick="printOnly('pivotPrint','Pivot Übersicht')">Drucken</button>
+      </div>
+    </div>
+    <div id="pivotWrap" class="content">
+      <div id="pivotPrint" class="table-wrap">
+        <table id="pivotTable">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">Monatsvergleich als Monatsblöcke</div>
+      <div class="section-actions">
+        <button class="btn secondary" onclick="toggleSection('monthlyWrap')">öffnen / schließen</button>
+        <button class="btn secondary" onclick="printOnly('monthlyPrint','Monatsvergleich')">Drucken</button>
+      </div>
+    </div>
+    <div id="monthlyWrap" class="content">
+      <div id="monthlyPrint" class="month-stack"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">Drei umsatzstärkste Gruppen pro Monat</div>
+      <div class="section-actions">
+        <button class="btn secondary" onclick="toggleSection('top3Wrap')">öffnen / schließen</button>
+      </div>
+    </div>
+    <div id="top3Wrap" class="content">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Monat</th><th>🥇 Gruppe</th><th>Revenue</th><th>🥈 Gruppe</th><th>Revenue</th><th>🥉 Gruppe</th><th>Revenue</th></tr></thead>
+          <tbody id="top3Body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">Management-Ansicht pro Serie</div>
+      <div class="section-actions">
+        <button class="btn secondary" onclick="toggleSection('seriesWrap')">öffnen / schließen</button>
+        <button class="btn secondary" onclick="printOnly('seriesPrint','Management-Ansicht pro Serie')">Drucken</button>
+      </div>
+    </div>
+    <div id="seriesWrap" class="content">
+      <div id="seriesPrint" class="series-grid"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_DATA = "pms_dashboard_v18_store";
+const STORAGE_PROFILE = "pms_dashboard_v18_profile_fields";
+const STORAGE_PIVOT = "pms_dashboard_v18_pivot_state";
+const monthNames = ["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
+const seriesCreamColors = ["#f6e7a8","#dce9f8","#dcefdc","#f6d9e8","#f4e1b7","#d6e6f5","#d9edd2","#f4d6dd","#efe0a6","#d9eaf2","#e2f0d0","#f2d7e6"];
+let seriesStore = {};
+let seriesData = [];
+let currentYear = "";
+let profileFields = {};
+let collapsedPastYears = {};
+let mergedCorporateMap = {};
+let pivotState = {metric:"roomRevenue", yearMode:"current", viewMode:"monthsSeries", seriesMode:"all"};
+
+try{
+  const saved = JSON.parse(localStorage.getItem(STORAGE_PIVOT)||"null");
+  if(saved) pivotState = {...pivotState, ...saved};
+}catch(e){}
+
+function fmt(n){ return Number(n || 0).toLocaleString("de-CH",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmt0(n){ return Number(n || 0).toLocaleString("de-CH",{maximumFractionDigits:0}); }
+function escapeHtml(s){ return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function toggleSection(id){ document.getElementById(id).classList.toggle("hidden"); }
+function printOnly(id,title){
+  const content = document.getElementById(id).innerHTML;
+  const win = window.open("", "print");
+  win.document.write(`<html><head><meta charset="utf-8"><title>${title}</title><style>
+  body{font-family:Arial;padding:12px;color:#222}h2{margin:0 0 10px 0;color:#123b66}
+  table{width:100%;border-collapse:collapse;table-layout:fixed}th,td{border:1px solid #ccc;padding:6px;text-align:center;font-size:10.5px;word-wrap:break-word}
+  th{background:#eef3f9;color:#123b66}.left{text-align:left}
+  @page{size:A4 landscape;margin:8mm}
+  </style></head><body><h2>${title}</h2>${content}</body></html>`);
+  win.document.close(); win.focus(); win.print();
+}
+function saveStore(){ localStorage.setItem(STORAGE_DATA, JSON.stringify(seriesStore)); }
+function loadStore(){ try{ seriesStore = JSON.parse(localStorage.getItem(STORAGE_DATA)||"{}") || {}; }catch(e){ seriesStore = {}; } }
+function saveProfiles(){ localStorage.setItem(STORAGE_PROFILE, JSON.stringify(profileFields)); }
+function loadProfiles(){ try{ profileFields = JSON.parse(localStorage.getItem(STORAGE_PROFILE)||"{}") || {}; }catch(e){ profileFields = {}; } }
+function savePivot(){ localStorage.setItem(STORAGE_PIVOT, JSON.stringify(pivotState)); }
+function blankMonths(){ return monthNames.map(() => ({cur:{roomRevenue:0,roomNights:0,fbRevenue:0,blockAdr:0,fbpp:0},ly:{roomRevenue:0,roomNights:0,fbRevenue:0,blockAdr:0,fbpp:0},hasLY:false})); }
+function monthIndexFromValue(v){ const n = Number(v); return Number.isFinite(n) && n>=1 && n<=12 ? n-1 : -1; }
+function cleanCorporateId(raw){ const s=String(raw||""); const m=s.match(/Corporate\s*ID\s*:\s*(\d+)/i)||s.match(/CorporateID\s*:\s*(\d+)/i)||s.match(/(\d{5,})/); return m?m[1]:""; }
+function diffClass(cur,ly,hasLY){ if(!hasLY) return ""; const d=(cur||0)-(ly||0); return d>0?"good":(d<0?"bad":""); }
+function pct(cur,ly,hasLY){ if(!hasLY||!ly) return "–"; return fmt(((cur-ly)/ly)*100)+" %"; }
+
+function normalizeStoreToSeriesData(){
+  const entries = Object.values(seriesStore);
+  if(!entries.length){ seriesData=[]; currentYear=""; return; }
+  const years = entries.map(e => Number(e.currentYear || 0)).filter(Boolean).sort((a,b)=>b-a);
+  currentYear = years.length ? String(years[0]) : "";
+  seriesData = entries.map(e => {
+    const months = blankMonths();
+    (e.currentMonths || []).forEach((m, idx) => { months[idx].cur = {...months[idx].cur, ...m}; });
+    (e.lyMonths || []).forEach((m, idx) => {
+      months[idx].ly = {...months[idx].ly, ...m};
+      if((m.roomRevenue||0)!==0 || (m.roomNights||0)!==0 || (m.fbRevenue||0)!==0 || (m.blockAdr||0)!==0 || (m.fbpp||0)!==0){ months[idx].hasLY = true; }
+    });
+    return { key:e.key, series:e.series, corporateId:e.corporateId, currentYear:e.currentYear || "", lyYear:e.lyYear || "", months };
+  }).sort((a,b)=>a.series.localeCompare(b.series,"de"));
+}
+function seriesTotal(s){ return s.months.reduce((a,m)=>{ a.roomRevenue += m.cur.roomRevenue||0; a.roomNights += m.cur.roomNights||0; a.fbRevenue += m.cur.fbRevenue||0; return a; }, {roomRevenue:0,roomNights:0,fbRevenue:0}); }
+function buildMonthlySummary(){
+  const out=monthNames.map((name,idx)=>({month:name,idx,cur:{roomRevenue:0,roomNights:0,fbRevenue:0,blockAdrSum:0,fbppSum:0,count:0},ly:{roomRevenue:0,roomNights:0,fbRevenue:0,blockAdrSum:0,fbppSum:0,count:0},hasLY:false}));
+  seriesData.forEach(s=>s.months.forEach((m,idx)=>{
+    out[idx].cur.roomRevenue+=m.cur.roomRevenue||0; out[idx].cur.roomNights+=m.cur.roomNights||0; out[idx].cur.fbRevenue+=m.cur.fbRevenue||0;
+    if(m.cur.blockAdr||m.cur.roomNights){ out[idx].cur.blockAdrSum += (m.cur.blockAdr||0); out[idx].cur.count += 1; }
+    if(m.cur.fbpp||m.cur.roomNights) out[idx].cur.fbppSum += (m.cur.fbpp||0);
+    out[idx].ly.roomRevenue+=m.ly.roomRevenue||0; out[idx].ly.roomNights+=m.ly.roomNights||0; out[idx].ly.fbRevenue+=m.ly.fbRevenue||0;
+    if(m.ly.blockAdr||m.ly.roomNights){ out[idx].ly.blockAdrSum += (m.ly.blockAdr||0); out[idx].ly.count += 1; }
+    if(m.ly.fbpp||m.ly.roomNights) out[idx].ly.fbppSum += (m.ly.fbpp||0);
+    out[idx].hasLY=out[idx].hasLY||!!m.hasLY;
+  }));
+  out.forEach(m=>{
+    m.cur.blockAdr = m.cur.count ? m.cur.blockAdrSum / m.cur.count : 0;
+    m.ly.blockAdr = (m.hasLY && m.ly.count) ? m.ly.blockAdrSum / m.ly.count : 0;
+    m.cur.fbpp = m.cur.count ? m.cur.fbppSum / m.cur.count : 0;
+    m.ly.fbpp = (m.hasLY && m.ly.count) ? m.ly.fbppSum / m.ly.count : 0;
+  });
+  return out;
+}
+function buildTop3(){ return monthNames.map((monthName,idx)=>{ const ranked=seriesData.map(s=>({series:s.series,revenue:s.months[idx].cur.roomRevenue||0})).filter(x=>x.revenue!==0).sort((a,b)=>b.revenue-a.revenue); return {month:monthName, top:ranked.slice(0,3)}; }); }
+function isTop3(seriesName,monthIdx){ return buildTop3()[monthIdx].top.some(x=>x.series===seriesName&&x.revenue>0); }
+
+function renderKpis(){
+  document.getElementById("kpiSeries").textContent=seriesData.length;
+  const summary=buildMonthlySummary();
+  document.getElementById("kpiMonths").textContent=summary.filter(m=>m.cur.roomRevenue||m.cur.roomNights||m.cur.fbRevenue).length;
+  let roomRevenue=0, roomNights=0, fbRevenue=0, blockAdrSum=0, count=0;
+  seriesData.forEach(s=>{ const t=seriesTotal(s); roomRevenue+=t.roomRevenue; roomNights+=t.roomNights; fbRevenue+=t.fbRevenue; s.months.forEach(m=>{ if(m.cur.blockAdr||m.cur.roomNights){ blockAdrSum += (m.cur.blockAdr||0); count += 1; } }); });
+  document.getElementById("kpiRoomRevenue").textContent=fmt(roomRevenue);
+  document.getElementById("kpiRoomNights").textContent=fmt0(roomNights);
+  document.getElementById("kpiFBRevenue").textContent=fmt(fbRevenue);
+  document.getElementById("kpiAdr").textContent=fmt(count ? blockAdrSum / count : 0);
+}
+
+function getMetricNumeric(monthObj, metric, yearMode){
+  const base = yearMode === "ly" ? monthObj.ly : monthObj.cur;
+  const cur = monthObj.cur[metric] || 0;
+  const ly = monthObj.ly[metric] || 0;
+  const hasLY = monthObj.hasLY;
+  if(yearMode === "current") return base[metric] || 0;
+  if(yearMode === "ly") return hasLY ? (base[metric] || 0) : null;
+  if(yearMode === "diff") return hasLY ? (cur - ly) : null;
+  if(yearMode === "pct") return (hasLY && ly) ? (((cur - ly) / ly) * 100) : null;
+  return 0;
+}
+function formatMetricValue(value, metric, yearMode){
+  if(value === null || value === undefined) return "–";
+  if(metric === "roomNights") return yearMode === "pct" ? fmt(value)+" %" : fmt0(value);
+  return yearMode === "pct" ? fmt(value)+" %" : fmt(value);
+}
+function metricLabel(metric){
+  return {
+    roomRevenue:"Room Revenue",
+    roomNights:"Room Nights",
+    fbRevenue:"F&B Revenue",
+    fbpp:"F&B / Guest",
+    blockAdr:"Block ADR"
+  }[metric] || "Room Revenue";
+}
+function updateSeriesModeOptions(){
+  const sel = document.getElementById("pivotSeriesMode");
+  const current = pivotState.seriesMode;
+  const options = ['<option value="all">Alle Serien</option>']
+    .concat(seriesData.map(s => `<option value="${escapeHtml(s.key)}">${escapeHtml(s.series)}</option>`));
+  sel.innerHTML = options.join("");
+  sel.value = seriesData.some(s=>s.key===current) || current==="all" ? current : "all";
+  pivotState.seriesMode = sel.value;
+}
+function filteredSeriesForPivot(){
+  if(pivotState.seriesMode === "all") return seriesData;
+  return seriesData.filter(s => s.key === pivotState.seriesMode);
+}
+function renderPivot(){
+  updateSeriesModeOptions();
+  const thead = document.querySelector("#pivotTable thead");
+  const tbody = document.querySelector("#pivotTable tbody");
+  const usedSeries = filteredSeriesForPivot();
+
+  if(pivotState.viewMode === "monthsSeries"){
+    thead.innerHTML = `<tr><th class="left">${metricLabel(pivotState.metric)}</th>${usedSeries.map(s=>`<th>${escapeHtml(s.series)}</th>`).join("")}</tr>`;
+    tbody.innerHTML = monthNames.map((m, idx) => {
+      const cells = usedSeries.map(s => {
+        const val = getMetricNumeric(s.months[idx], pivotState.metric, pivotState.yearMode);
+        return `<td class="mono">${formatMetricValue(val, pivotState.metric, pivotState.yearMode)}</td>`;
+      }).join("");
+      return `<tr><td class="left"><strong>${m} ${currentYear||""}</strong></td>${cells}</tr>`;
+    }).join("");
+  } else {
+    thead.innerHTML = `<tr><th class="left">Serie</th>${monthNames.map(m=>`<th>${m} ${currentYear||""}</th>`).join("")}</tr>`;
+    tbody.innerHTML = usedSeries.map(s => {
+      const cells = s.months.map(monthObj => {
+        const val = getMetricNumeric(monthObj, pivotState.metric, pivotState.yearMode);
+        return `<td class="mono">${formatMetricValue(val, pivotState.metric, pivotState.yearMode)}</td>`;
+      }).join("");
+      return `<tr><td class="left"><strong>${escapeHtml(s.series)}</strong></td>${cells}</tr>`;
+    }).join("");
+  }
+}
+
+function renderMonthlyBlocks(){
+  const wrap=document.getElementById("monthlyPrint");
+  const summary=buildMonthlySummary();
+  wrap.innerHTML=summary.filter(m=>m.cur.roomRevenue||m.cur.roomNights||m.cur.fbRevenue).map(m=>{
+    const visible=seriesData.filter(s=>{const x=s.months[m.idx]; return x.cur.roomRevenue||x.cur.roomNights||x.cur.fbRevenue;}).sort((a,b)=>(b.months[m.idx].cur.roomRevenue||0)-(a.months[m.idx].cur.roomRevenue||0));
+    const rows=visible.map(s=>{ const x=s.months[m.idx]; return `<tr>
+      <td class="series-cell">${isTop3(s.series,m.idx)?"🏆 ":""}${escapeHtml(s.series)}<div class="corp">CorporateID: ${escapeHtml(s.corporateId||"–")}</div></td>
+      <td class="mono">${fmt(x.cur.roomRevenue)}</td><td class="mono">${x.hasLY?fmt(x.ly.roomRevenue):"–"}</td><td class="mono ${diffClass(x.cur.roomRevenue,x.ly.roomRevenue,x.hasLY)}">${x.hasLY?fmt(x.cur.roomRevenue-x.ly.roomRevenue):"–"}</td><td class="mono ${diffClass(x.cur.roomRevenue,x.ly.roomRevenue,x.hasLY)}">${pct(x.cur.roomRevenue,x.ly.roomRevenue,x.hasLY)}</td>
+      <td class="mono">${fmt0(x.cur.roomNights)}</td><td class="mono">${x.hasLY?fmt0(x.ly.roomNights):"–"}</td><td class="mono ${diffClass(x.cur.roomNights,x.ly.roomNights,x.hasLY)}">${x.hasLY?fmt0(x.cur.roomNights-x.ly.roomNights):"–"}</td><td class="mono ${diffClass(x.cur.roomNights,x.ly.roomNights,x.hasLY)}">${pct(x.cur.roomNights,x.ly.roomNights,x.hasLY)}</td>
+      <td class="mono">${fmt(x.cur.fbRevenue)}</td><td class="mono">${x.hasLY?fmt(x.ly.fbRevenue):"–"}</td><td class="mono ${diffClass(x.cur.fbRevenue,x.ly.fbRevenue,x.hasLY)}">${x.hasLY?fmt(x.cur.fbRevenue-x.ly.fbRevenue):"–"}</td><td class="mono ${diffClass(x.cur.fbRevenue,x.ly.fbRevenue,x.hasLY)}">${pct(x.cur.fbRevenue,x.ly.fbRevenue,x.hasLY)}</td>
+      <td class="mono">${fmt(x.cur.fbpp)}</td><td class="mono">${x.hasLY?fmt(x.ly.fbpp):"–"}</td><td class="mono ${diffClass(x.cur.fbpp,x.ly.fbpp,x.hasLY)}">${x.hasLY?fmt(x.cur.fbpp-x.ly.fbpp):"–"}</td><td class="mono ${diffClass(x.cur.fbpp,x.ly.fbpp,x.hasLY)}">${pct(x.cur.fbpp,x.ly.fbpp,x.hasLY)}</td>
+      <td class="mono">${fmt(x.cur.blockAdr)}</td><td class="mono">${x.hasLY?fmt(x.ly.blockAdr):"–"}</td><td class="mono ${diffClass(x.cur.blockAdr,x.ly.blockAdr,x.hasLY)}">${x.hasLY?fmt(x.cur.blockAdr-x.ly.blockAdr):"–"}</td><td class="mono ${diffClass(x.cur.blockAdr,x.ly.blockAdr,x.hasLY)}">${pct(x.cur.blockAdr,x.ly.blockAdr,x.hasLY)}</td>
+    </tr>`; }).join("");
+    return `<div class="month-card"><div class="month-head"><div><div class="month-title">${m.month} ${currentYear||""}</div><div class="month-sub">Zusammenfassung aller Gruppen im selben Monat</div></div><div class="month-chips"><div class="month-chip">${visible.length} Gruppen</div><div class="month-chip">Top 3 markiert</div></div></div>
+      <table class="matrix"><thead><tr><th class="seriehead left" rowspan="2">Serie</th><th colspan="4">Room Revenue</th><th colspan="4">Room Nights</th><th colspan="4">F&amp;B Revenue</th><th colspan="4">F&amp;B / Guest</th><th colspan="4">Block Room ADR</th></tr>
+      <tr><th class="kpi-cur">Aktuell</th><th class="kpi-ly">LY</th><th class="kpi-d">Δ</th><th class="kpi-p">Δ%</th><th class="kpi-cur">Aktuell</th><th class="kpi-ly">LY</th><th class="kpi-d">Δ</th><th class="kpi-p">Δ%</th><th class="kpi-cur">Aktuell</th><th class="kpi-ly">LY</th><th class="kpi-d">Δ</th><th class="kpi-p">Δ%</th><th class="kpi-cur">Aktuell</th><th class="kpi-ly">LY</th><th class="kpi-d">Δ</th><th class="kpi-p">Δ%</th><th class="kpi-cur">Aktuell</th><th class="kpi-ly">LY</th><th class="kpi-d">Δ</th><th class="kpi-p">Δ%</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>`;
+  }).join("");
+}
+
+function renderTop3(){
+  const tbody=document.getElementById("top3Body");
+  tbody.innerHTML=buildTop3().filter(r=>r.top.length).map(r=>{const a=r.top[0]||{series:"–",revenue:0}; const b=r.top[1]||{series:"–",revenue:0}; const c=r.top[2]||{series:"–",revenue:0}; return `<tr><td class="left"><strong>${r.month} ${currentYear||""}</strong></td><td>${escapeHtml(a.series)}</td><td class="mono">${a.revenue?fmt(a.revenue):"–"}</td><td>${escapeHtml(b.series)}</td><td class="mono">${b.revenue?fmt(b.revenue):"–"}</td><td>${escapeHtml(c.series)}</td><td class="mono">${c.revenue?fmt(c.revenue):"–"}</td></tr>`; }).join("");
+}
+
+function getProfile(key, year){
+  const p = profileFields[key] || {};
+  return p[year] || {breakfast:"", single:"", doubleTwin:"", triple:"", halfboard:""};
+}
+function getCardColor(index){
+  return seriesCreamColors[index % seriesCreamColors.length];
+}
+function getSeriesColorByKey(key){
+  const keys = seriesData.map(s => s.key).sort();
+  const idx = Math.max(0, keys.indexOf(key));
+  return seriesCreamColors[idx % seriesCreamColors.length];
+}
+function saveCollapsedPastYears(){
+  try{ localStorage.setItem("pms_dashboard_v18_collapsed_years", JSON.stringify(collapsedPastYears)); }catch(e){}
+}
+function loadCollapsedPastYears(){
+  try{ collapsedPastYears = JSON.parse(localStorage.getItem("pms_dashboard_v18_collapsed_years")||"{}") || {}; }catch(e){ collapsedPastYears = {}; }
+}
+function isPastYearCollapsed(key){
+  return collapsedPastYears[key] !== false;
+}
+function setPastYearCollapsed(key, val){
+  collapsedPastYears[key] = !!val;
+  saveCollapsedPastYears();
+}
+function saveMergedCorporateMap(){
+  try{ localStorage.setItem("pms_dashboard_v18_merged_corporates", JSON.stringify(mergedCorporateMap)); }catch(e){}
+}
+function loadMergedCorporateMap(){
+  try{ mergedCorporateMap = JSON.parse(localStorage.getItem("pms_dashboard_v18_merged_corporates")||"{}") || {}; }catch(e){ mergedCorporateMap = {}; }
+}
+function effectiveCorporateId(rawId){
+  return mergedCorporateMap[rawId] || rawId;
+}
+function refreshMergeSelectors(){
+  const a = document.getElementById("mergeSeriesA");
+  const b = document.getElementById("mergeSeriesB");
+  if(!a || !b) return;
+  const corpIds = Array.from(new Set(seriesData.map(s => s.corporateId).filter(Boolean))).sort();
+  const opts = ['<option value="">CorporateID wählen</option>'].concat(corpIds.map(id => `<option value="${escapeHtml(id)}">${escapeHtml(id)}</option>`));
+  a.innerHTML = opts.join("");
+  b.innerHTML = opts.join("");
+}
+function mergeImportFromStoreEntry(entry, newCorp){
+  let existingKey = Object.keys(seriesStore).find(k => seriesStore[k].corporateId === newCorp);
+  if(!existingKey){
+    const key = newCorp + "__" + entry.series;
+    seriesStore[key] = {
+      key,
+      series: entry.series,
+      corporateId: newCorp,
+      currentYear: entry.currentYear,
+      lyYear: entry.lyYear || "",
+      currentMonths: JSON.parse(JSON.stringify(entry.currentMonths || [])),
+      lyMonths: JSON.parse(JSON.stringify(entry.lyMonths || []))
+    };
+    return;
+  }
+  const target = seriesStore[existingKey];
+  const targetCur = Number(target.currentYear || 0);
+  const entryCur = Number(entry.currentYear || 0);
+
+  if(String(target.currentYear||"") === String(entry.currentYear||"")){
+    const maxLen = Math.max((target.currentMonths||[]).length, (entry.currentMonths||[]).length, 12);
+    target.currentMonths = Array.from({length:maxLen}, (_, idx) => {
+      const m = (target.currentMonths || [])[idx] || {};
+      const e = (entry.currentMonths || [])[idx] || {};
+      return {
+        roomRevenue:(m.roomRevenue||0)+(e.roomRevenue||0),
+        roomNights:(m.roomNights||0)+(e.roomNights||0),
+        fbRevenue:(m.fbRevenue||0)+(e.fbRevenue||0),
+        blockAdr: ((m.blockAdr||0) || (e.blockAdr||0)) ? ((m.blockAdr||0)+(e.blockAdr||0))/((m.blockAdr?1:0)+(e.blockAdr?1:0)||1) : 0,
+        fbpp: ((m.fbpp||0) || (e.fbpp||0)) ? ((m.fbpp||0)+(e.fbpp||0))/((m.fbpp?1:0)+(e.fbpp?1:0)||1) : 0
+      };
+    });
+  } else if(entryCur > targetCur){
+    target.lyYear = target.currentYear || "";
+    target.lyMonths = JSON.parse(JSON.stringify(target.currentMonths || []));
+    target.currentYear = entry.currentYear;
+    target.currentMonths = JSON.parse(JSON.stringify(entry.currentMonths || []));
+  } else {
+    const maxLen = Math.max((target.lyMonths||[]).length, (entry.currentMonths||[]).length, 12);
+    if(!target.lyYear || String(target.lyYear||"") === String(entry.currentYear||"")) target.lyYear = entry.currentYear || target.lyYear;
+    target.lyMonths = Array.from({length:maxLen}, (_, idx) => {
+      const m = (target.lyMonths || [])[idx] || {};
+      const e = (entry.currentMonths || [])[idx] || {};
+      return {
+        roomRevenue:(m.roomRevenue||0)+(e.roomRevenue||0),
+        roomNights:(m.roomNights||0)+(e.roomNights||0),
+        fbRevenue:(m.fbRevenue||0)+(e.fbRevenue||0),
+        blockAdr: ((m.blockAdr||0) || (e.blockAdr||0)) ? ((m.blockAdr||0)+(e.blockAdr||0))/((m.blockAdr?1:0)+(e.blockAdr?1:0)||1) : 0,
+        fbpp: ((m.fbpp||0) || (e.fbpp||0)) ? ((m.fbpp||0)+(e.fbpp||0))/((m.fbpp?1:0)+(e.fbpp?1:0)||1) : 0
+      };
+    });
+  }
+}
+function rebuildStoreWithMergedCorporateIds(){
+  const old = JSON.parse(JSON.stringify(seriesStore));
+  seriesStore = {};
+  Object.values(old).forEach(entry => {
+    const newCorp = effectiveCorporateId(entry.corporateId);
+    mergeImportFromStoreEntry(entry, newCorp);
+  });
+  saveStore();
+  renderAll();
+}
+function mergeSelectedCorporateIds(){
+  const a = document.getElementById("mergeSeriesA").value;
+  const b = document.getElementById("mergeSeriesB").value;
+  if(!a || !b || a === b) return;
+  const target = [a,b].sort()[0];
+  const source = [a,b].sort()[1];
+  mergedCorporateMap[source] = target;
+  saveMergedCorporateMap();
+  rebuildStoreWithMergedCorporateIds();
+}
+function deleteSeriesByKey(key){
+  if(!seriesStore[key]) return;
+  delete seriesStore[key];
+  if(profileFields[key]) delete profileFields[key];
+  saveStore();
+  saveProfiles();
+  renderAll();
+}
+function renderSeriesBlocks(){
+  const wrap=document.getElementById("seriesPrint");
+  wrap.innerHTML=seriesData.map((s, index)=>{ 
+    const totalCur=seriesTotal(s);
+    const totalLY = s.months.reduce((a,m)=>{ a.roomRevenue += m.ly.roomRevenue||0; a.roomNights += m.ly.roomNights||0; a.fbRevenue += m.ly.fbRevenue||0; return a; }, {roomRevenue:0,roomNights:0,fbRevenue:0});
+    const profile2025=getProfile(s.key,"2025");
+    const profile2026=getProfile(s.key,"2026");
+    const cardColor = getSeriesColorByKey(s.key) || getCardColor(index);
+    const yearRows = [];
+    const years = [];
+    if(s.lyYear) years.push(String(s.lyYear));
+    if(s.currentYear && !years.includes(String(s.currentYear))) years.push(String(s.currentYear));
+    ["2025","2026"].forEach(y => { if(!years.includes(y)) years.push(y); });
+
+    const activeYear = String(s.currentYear || currentYear || "");
+    const pastYears = years.filter(y => y && y !== activeYear);
+    const collapsePast = isPastYearCollapsed(s.key);
+
+    years.forEach(y => {
+      const isPast = y && y !== activeYear;
+      const hideRows = isPast && collapsePast;
+      yearRows.push(`<tr class="yearbreak"><td colspan="7">${escapeHtml(y)}${hideRows ? " • ausgeblendet" : ""}</td></tr>`);
+      const sourceMonths = (String(y) === String(s.currentYear)) ? s.months.map(m=>m.cur) :
+                           (String(y) === String(s.lyYear)) ? s.months.map(m=>m.ly) :
+                           monthNames.map(()=>({roomRevenue:0,roomNights:0,fbRevenue:0,blockAdr:0,fbpp:0}));
+      if(!hideRows){
+        monthNames.forEach((mn, idx) => {
+          const m = sourceMonths[idx] || {roomRevenue:0,roomNights:0,fbRevenue:0,blockAdr:0,fbpp:0};
+          yearRows.push(`<tr>
+            <td class="left monthcol">${mn}</td>
+            <td class="mono widecol">${fmt(m.roomRevenue||0)}</td>
+            <td class="mono widecol">${fmt0(m.roomNights||0)}</td>
+            <td class="mono widecol">${fmt(m.fbRevenue||0)}</td>
+            <td class="mono narrowcol">${fmt(m.fbpp||0)}</td>
+            <td class="mono narrowcol">${fmt(m.blockAdr||0)}</td>
+            <td class="mono widecol">${escapeHtml(y)}</td>
+          </tr>`);
+        });
+      }
+    });
+
+    return `<div class="series-card" style="background:#ffffff; border-color:rgba(18,59,102,.18)">
+      <div class="series-head" style="background:${cardColor}; border-bottom:1px solid rgba(18,59,102,.14)">
+        <div>
+          <div class="series-title">${escapeHtml(s.series)} <span class="corp">CorporateID: ${escapeHtml(s.corporateId||"–")}</span></div>
+          <div class="series-sub">
+            <div><strong>${escapeHtml(s.currentYear||"")}</strong> — Room Revenue ${fmt(totalCur.roomRevenue)} • Room Nights ${fmt0(totalCur.roomNights)} • F&amp;B Revenue ${fmt(totalCur.fbRevenue)}</div>
+            ${s.lyYear ? `<div style="margin-top:4px;padding-top:4px;border-top:1px solid rgba(18,59,102,.18)"><strong>${escapeHtml(s.lyYear)}</strong> — Room Revenue ${fmt(totalLY.roomRevenue)} • Room Nights ${fmt0(totalLY.roomNights)} • F&amp;B Revenue ${fmt(totalLY.fbRevenue)}</div>` : ``}
+          </div>
+        </div>
+        <div class="series-actions">
+          ${pastYears.length ? `<button class="year-toggle" data-key="${escapeHtml(s.key)}">${collapsePast ? `${escapeHtml(pastYears.join(", "))} anzeigen` : `${escapeHtml(pastYears.join(", "))} ausblenden`}</button>` : ``}
+          <button class="delete-series-btn" data-delete-key="${escapeHtml(s.key)}">Serie löschen</button>
+        </div>
+      </div>
+      <div class="content" style="padding:10px 12px;background:#ffffff">
+        <table class="series-mini" style="background:#ffffff">
+          <thead>
+            <tr>
+              <th class="monthcol">Monat</th>
+              <th class="widecol">Room Revenue</th>
+              <th class="widecol">Room Nights</th>
+              <th class="widecol">F&amp;B Revenue</th>
+              <th class="narrowcol">F&amp;B / Guest</th>
+              <th class="narrowcol">Block ADR</th>
+              <th class="widecol">Jahr</th>
+            </tr>
+          </thead>
+          <tbody>${yearRows.join("")}</tbody>
+        </table>
+      </div>
+      <div class="profile-box" style="background:#ffffff">
+        <div class="small" style="margin-bottom:8px"><strong>Profile Daten in CHF – eine Zeile pro Jahr</strong></div>
+        <div class="profile-year-row" style="background:${cardColor}">
+          <div class="profile-year-label">Jahr 2025</div>
+          <div><label>Frühstück CHF</label><input value="${escapeHtml(profile2025.breakfast)}" data-key="${escapeHtml(s.key)}" data-year="2025" data-type="breakfast" placeholder="0.00"></div>
+          <div><label>Single CHF</label><input value="${escapeHtml(profile2025.single)}" data-key="${escapeHtml(s.key)}" data-year="2025" data-type="single" placeholder="0.00"></div>
+          <div><label>Double/Twin CHF</label><input value="${escapeHtml(profile2025.doubleTwin)}" data-key="${escapeHtml(s.key)}" data-year="2025" data-type="doubleTwin" placeholder="0.00"></div>
+          <div><label>Triple CHF</label><input value="${escapeHtml(profile2025.triple)}" data-key="${escapeHtml(s.key)}" data-year="2025" data-type="triple" placeholder="0.00"></div>
+          <div><label>Halfboard CHF</label><input value="${escapeHtml(profile2025.halfboard)}" data-key="${escapeHtml(s.key)}" data-year="2025" data-type="halfboard" placeholder="0.00"></div>
+        </div>
+        <div class="profile-year-row" style="background:${cardColor}">
+          <div class="profile-year-label">Jahr 2026</div>
+          <div><label>Frühstück CHF</label><input value="${escapeHtml(profile2026.breakfast)}" data-key="${escapeHtml(s.key)}" data-year="2026" data-type="breakfast" placeholder="0.00"></div>
+          <div><label>Single CHF</label><input value="${escapeHtml(profile2026.single)}" data-key="${escapeHtml(s.key)}" data-year="2026" data-type="single" placeholder="0.00"></div>
+          <div><label>Double/Twin CHF</label><input value="${escapeHtml(profile2026.doubleTwin)}" data-key="${escapeHtml(s.key)}" data-year="2026" data-type="doubleTwin" placeholder="0.00"></div>
+          <div><label>Triple CHF</label><input value="${escapeHtml(profile2026.triple)}" data-key="${escapeHtml(s.key)}" data-year="2026" data-type="triple" placeholder="0.00"></div>
+          <div><label>Halfboard CHF</label><input value="${escapeHtml(profile2026.halfboard)}" data-key="${escapeHtml(s.key)}" data-year="2026" data-type="halfboard" placeholder="0.00"></div>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+
+  wrap.querySelectorAll("input[data-key][data-year]").forEach(inp=>inp.addEventListener("input", function(){
+    const key=this.getAttribute("data-key"), year=this.getAttribute("data-year"), type=this.getAttribute("data-type");
+    if(!profileFields[key]) profileFields[key] = {};
+    if(!profileFields[key][year]) profileFields[key][year] = {breakfast:"", single:"", doubleTwin:"", triple:"", halfboard:""};
+    profileFields[key][year][type] = this.value;
+    saveProfiles();
+  }));
+
+  wrap.querySelectorAll(".year-toggle").forEach(btn=>btn.addEventListener("click", function(){
+    const key = this.getAttribute("data-key");
+    setPastYearCollapsed(key, !isPastYearCollapsed(key));
+    renderSeriesBlocks();
+  }));
+
+  wrap.querySelectorAll(".delete-series-btn").forEach(btn=>btn.addEventListener("click", function(){
+    const key = this.getAttribute("data-delete-key");
+    deleteSeriesByKey(key);
+  }));
+}
+
+function renderAll(){
+  normalizeStoreToSeriesData();
+  document.getElementById("pivotMetric").value = pivotState.metric;
+  document.getElementById("pivotYearMode").value = pivotState.yearMode;
+  document.getElementById("pivotViewMode").value = pivotState.viewMode;
+  renderKpis();
+  refreshMergeSelectors();
+  renderPivot();
+  renderMonthlyBlocks();
+  renderTop3();
+  renderSeriesBlocks();
+}
+
+function parseDelimited(text,delim){
+  const rows=[]; let row=[], cur="", inQuotes=false;
+  for(let i=0;i<text.length;i++){ const ch=text[i], next=text[i+1];
+    if(ch === '"'){ if(inQuotes && next === '"'){ cur+='"'; i++; } else inQuotes=!inQuotes; continue; }
+    if(!inQuotes && (ch === '\n' || ch === '\r')){ if(ch === '\r' && next === '\n') i++; row.push(cur); rows.push(row); row=[]; cur=""; continue; }
+    if(!inQuotes && ch === delim){ row.push(cur); cur=""; continue; }
+    cur += ch;
+  }
+  row.push(cur); rows.push(row);
+  return rows.map(r=>r.map(c=>String(c??"").trim()));
+}
+function detectDelimiter(line){ if(line.includes('\t')) return '\t'; const semi=(line.match(/;/g)||[]).length; const comma=(line.match(/,/g)||[]).length; return semi>comma?';':','; }
+function normHeader(s){ return String(s||"").trim().toUpperCase(); }
+function buildHeaderMap(row){ const map={}; row.forEach((h,i)=>map[normHeader(h)]=i); return map; }
+function getCell(cols,map,name){ const idx=map[normHeader(name)]; return idx===undefined?"":(cols[idx]??""); }
+function toNum(x){ const s=String(x??"").replace(/\s/g,"").replace(/,/g,""); const n=Number(s); return Number.isFinite(n)?n:0; }
+function looksLikeHeader(row){ const keys=row.map(normHeader); return keys.includes("SORT_ALPHA") && keys.includes("MONTH_SORT") && keys.includes("ROOM") && keys.includes("FOOD"); }
+function isGarbageRow(cols){
+  if(!cols || !cols.length) return true;
+  const first=String(cols[0]||"").trim().toUpperCase();
+  const second=String(cols[1]||"").trim().toUpperCase();
+  if(!first && cols.filter(x=>String(x||"").trim()).length<=1) return true;
+  if(first==="PROFILE_NAME"||first==="CF_LOGO"||first==="CS_COUNT_LOOPS") return true;
+  if(first==="RELATIONSHIP_TYPE"||second==="RELATIONSHIP_TYPE") return true;
+  if(first==="0" && cols.filter(x=>String(x||"").trim()).length===1) return true;
+  if(first==="*****") return true;
+  return false;
+}
+function parseHotelyText(text){
+  const firstLine=(text.split(/\r?\n/).find(l=>l.trim())||"");
+  const delim=detectDelimiter(firstLine);
+  const rows=parseDelimited(text,delim).filter(r=>r.some(c=>c!==""));
+  const hIdx=rows.findIndex(looksLikeHeader);
+  if(hIdx<0) return null;
+  const map=buildHeaderMap(rows[hIdx]);
+  let importYear = "";
+  const bySeries = {};
+  for(let i=hIdx+1;i<rows.length;i++){
+    const cols=rows[i];
+    if(isGarbageRow(cols)) continue;
+    const first=String(cols[0]||"").trim().toUpperCase();
+    if(first==="PROFILE_NAME"||first==="CF_LOGO") break;
+    const sortAlpha=getCell(cols,map,"SORT_ALPHA");
+    const guestName=getCell(cols,map,"GUEST_NAME");
+    const isTotal=getCell(cols,map,"IS_TOTAL_YN");
+    if(String(isTotal).toUpperCase()==="Y") continue;
+    if(String(sortAlpha).includes("Grand Total")||String(guestName).includes("Grand Total")) continue;
+    if(!sortAlpha || /^[0*]+$/.test(sortAlpha.trim())) continue;
+    if(/^(CS_COUNT_LOOPS|RELATIONSHIP_TYPE|PROFILE_NAME|CF_LOGO)$/i.test(sortAlpha.trim())) continue;
+    const monthIdx=monthIndexFromValue(getCell(cols,map,"MONTH_SORT"));
+    if(monthIdx<0) continue;
+    const year=String(getCell(cols,map,"C_YEAR")||"").trim();
+    if(year && !importYear) importYear=year;
+    const series=sortAlpha;
+    const corpRaw=getCell(cols,map,"CF_CORPID_POTENTIAL") || getCell(cols,map,"IATA_COMP_NO");
+    const corporateId=cleanCorporateId(corpRaw) || ("NOID_"+series);
+    if(!bySeries[series]) bySeries[series] = { series, corporateId, year, months: blankMonths() };
+    const roomRevenue=toNum(getCell(cols,map,"ROOM"));
+    const roomNights=toNum(getCell(cols,map,"ROOMS"));
+    const fbRevenue=toNum(getCell(cols,map,"FOOD"));
+    const blockAdr=toNum(getCell(cols,map,"CF_BLK_ADR"));
+    const fbpp=toNum(getCell(cols,map,"CF_FOOD_REVENUE_PP"));
+    bySeries[series].months[monthIdx].cur.roomRevenue = roomRevenue;
+    bySeries[series].months[monthIdx].cur.roomNights = roomNights;
+    bySeries[series].months[monthIdx].cur.fbRevenue = fbRevenue;
+    bySeries[series].months[monthIdx].cur.blockAdr = blockAdr;
+    bySeries[series].months[monthIdx].cur.fbpp = fbpp;
+  }
+  return {year: importYear, seriesEntries: Object.values(bySeries)};
+}
+function mergeImport(parsed){
+  if(!parsed || !parsed.seriesEntries) return;
+  parsed.seriesEntries.forEach(entry => {
+    const corpId = effectiveCorporateId(entry.corporateId);
+    let existingKey = Object.keys(seriesStore).find(k => seriesStore[k].corporateId === corpId);
+    if(!existingKey){
+      const key = corpId + "__" + entry.series;
+      seriesStore[key] = { key, series: entry.series, corporateId: corpId, currentYear: entry.year, lyYear: "", currentMonths: entry.months.map(m => ({...m.cur})), lyMonths: blankMonths().map(m => ({...m.cur})) };
+      return;
+    }
+    const target = seriesStore[existingKey];
+    if(String(target.currentYear || "") === String(entry.year || "")){
+      target.series = entry.series || target.series;
+      target.currentYear = entry.year || target.currentYear;
+      target.currentMonths = entry.months.map(m => ({...m.cur}));
+      return;
+    }
+    const targetCurrent = Number(target.currentYear || 0);
+    const incomingYear = Number(entry.year || 0);
+    if(incomingYear > targetCurrent){
+      target.lyYear = target.currentYear || "";
+      target.lyMonths = (target.currentMonths || blankMonths().map(m=>({...m.cur}))).map(m => ({...m}));
+      target.currentYear = entry.year || target.currentYear;
+      target.currentMonths = entry.months.map(m => ({...m.cur}));
+      target.series = entry.series || target.series;
+    } else {
+      target.lyYear = entry.year || target.lyYear;
+      target.lyMonths = entry.months.map(m => ({...m.cur}));
+    }
+  });
+  saveStore();
+  renderAll();
+}
+function clearDashboard(){ seriesStore = {}; profileFields = {}; mergedCorporateMap = {}; saveStore(); saveProfiles(); saveMergedCorporateMap(); renderAll(); }
+
+document.getElementById("pivotMetric").addEventListener("change", function(){
+  pivotState.metric = this.value; savePivot(); renderPivot();
+});
+document.getElementById("pivotYearMode").addEventListener("change", function(){
+  pivotState.yearMode = this.value; savePivot(); renderPivot();
+});
+document.getElementById("pivotViewMode").addEventListener("change", function(){
+  pivotState.viewMode = this.value; savePivot(); renderPivot();
+});
+document.getElementById("pivotSeriesMode").addEventListener("change", function(){
+  pivotState.seriesMode = this.value; savePivot(); renderPivot();
+});
+
+document.getElementById("fileInput").addEventListener("change", async function(e){
+  const files=Array.from(e.target.files||[]);
+  for(const file of files){
+    const text=await file.text();
+    const parsed = parseHotelyText(text);
+    if(parsed) mergeImport(parsed);
+  }
+  e.target.value="";
+});
+
+function copyFullCodeWithState(){
+  try{
+    const storeJson = JSON.stringify(seriesStore).replace(/</g,"\\u003c");
+    const profilesJson = JSON.stringify(profileFields).replace(/</g,"\\u003c");
+    const collapsedJson = JSON.stringify(collapsedPastYears).replace(/</g,"\\u003c");
+    const pivotJson = JSON.stringify(pivotState).replace(/</g,"\\u003c");
+
+    let fullHtml = document.documentElement.outerHTML;
+
+    const openScript = "<scr" + "ipt>";
+    const closeScript = "<" + "/scr" + "ipt>";
+    const inject =
+      openScript +
+      "localStorage.setItem('pms_dashboard_v18_store'," + JSON.stringify(storeJson) + ");" +
+      "localStorage.setItem('pms_dashboard_v18_profile_fields'," + JSON.stringify(profilesJson) + ");" +
+      "localStorage.setItem('pms_dashboard_v18_collapsed_years'," + JSON.stringify(collapsedJson) + ");" +
+      "localStorage.setItem('pms_dashboard_v18_pivot_state'," + JSON.stringify(pivotJson) + ");" +
+      closeScript +
+      "</body>";
+
+    fullHtml = fullHtml.replace("</body>", inject);
+
+    navigator.clipboard.writeText(fullHtml).then(function(){
+      alert("Der komplette Code mit deinem aktuellen Stand wurde in die Zwischenablage kopiert.");
+    }).catch(function(){
+      const ta = document.createElement("textarea");
+      ta.value = fullHtml;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+      alert("Der komplette Code mit deinem aktuellen Stand wurde in die Zwischenablage kopiert.");
+    });
+  }catch(e){
+    alert("Kopieren hat leider nicht funktioniert.");
+  }
+}
+
+loadStore();
+loadProfiles();
+loadCollapsedPastYears();
+loadMergedCorporateMap();
+renderAll();
+</script>
+</body>
+</html>
