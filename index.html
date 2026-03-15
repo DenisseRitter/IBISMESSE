@@ -124,6 +124,9 @@ th{background:#eef3f9;color:var(--blue);font-weight:900}
     <button class="btn gold" onclick="printOnly('seriesPrint','Management-Ansicht pro Serie')">Serienansicht drucken</button>
     <button class="btn secondary" onclick="clearDashboard()">Tabelle leeren</button>
     <button class="btn secondary" onclick="copyFullCodeWithState()">Code 1:1 kopieren</button>
+    <button class="btn secondary" onclick="exportDashboardData()">Daten exportieren</button>
+    <button class="btn secondary" onclick="importDashboardData()">Daten importieren</button>
+    <input type="file" id="importDashboardFile" accept=".json" style="display:none">
     <div class="filebox">
       <strong>Import:</strong>
       <input id="fileInput" type="file" accept=".txt,.csv,.tsv" multiple>
@@ -930,6 +933,62 @@ function copyFullCodeWithState(){
     alert("Kopieren hat leider nicht funktioniert.");
   }
 }
+
+
+function exportDashboardData(){
+  try{
+    const data = {
+      seriesStore: JSON.parse(localStorage.getItem("pms_dashboard_v18_store") || "{}"),
+      profileFields: JSON.parse(localStorage.getItem("pms_dashboard_v18_profile_fields") || "{}"),
+      nationalityFields: JSON.parse(localStorage.getItem("pms_dashboard_v23_nationality") || "{}"),
+      mergedCorporateMap: JSON.parse(localStorage.getItem("pms_dashboard_v18_merged_corporates") || "{}"),
+      collapsedPastYears: JSON.parse(localStorage.getItem("pms_dashboard_v18_collapsed_years") || "{}"),
+      pivotState: JSON.parse(localStorage.getItem("pms_dashboard_v18_pivot_state") || "{}")
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "gruppenserien_dashboard_daten.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }catch(e){
+    alert("Export konnte nicht erstellt werden.");
+  }
+}
+
+function importDashboardData(){
+  document.getElementById("importDashboardFile").click();
+}
+
+document.getElementById("importDashboardFile").addEventListener("change", function(e){
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(evt){
+    try{
+      const data = JSON.parse(evt.target.result);
+
+      if(data.seriesStore) localStorage.setItem("pms_dashboard_v18_store", JSON.stringify(data.seriesStore));
+      if(data.profileFields) localStorage.setItem("pms_dashboard_v18_profile_fields", JSON.stringify(data.profileFields));
+      if(data.nationalityFields) localStorage.setItem("pms_dashboard_v23_nationality", JSON.stringify(data.nationalityFields));
+      if(data.mergedCorporateMap) localStorage.setItem("pms_dashboard_v18_merged_corporates", JSON.stringify(data.mergedCorporateMap));
+      if(data.collapsedPastYears) localStorage.setItem("pms_dashboard_v18_collapsed_years", JSON.stringify(data.collapsedPastYears));
+      if(data.pivotState) localStorage.setItem("pms_dashboard_v18_pivot_state", JSON.stringify(data.pivotState));
+
+      alert("Daten erfolgreich importiert.");
+      location.reload();
+    }catch(err){
+      alert("Import fehlgeschlagen. Bitte eine gültige JSON-Datei verwenden.");
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = "";
+});
 
 loadStore();
 loadProfiles();
