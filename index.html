@@ -13,7 +13,7 @@
 body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:linear-gradient(180deg,#f7f9fc 0%,#eff3f8 100%)}
 .wrap{max-width:1880px;margin:0 auto;padding:18px}
 header{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;border-radius:20px;padding:18px 22px;box-shadow:0 14px 28px rgba(11,42,74,.18);margin-bottom:16px}
-h1{margin:0 0 6px 0;font-size:28px}
+h1{margin:0;font-size:28px}
 .sub{font-size:13px;opacity:.94}
 .toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}
 .btn{appearance:none;border:0;cursor:pointer;padding:10px 14px;border-radius:12px;font-weight:900;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;box-shadow:0 10px 18px rgba(11,42,74,.14)}
@@ -105,13 +105,23 @@ th{background:#eef3f9;color:var(--blue);font-weight:900}
   @page{size:A4 landscape;margin:8mm}
 }
 .btnrow{display:flex;gap:10px;flex-wrap:nowrap;align-items:center}
+
+.month-filter-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;align-items:center}
+.month-filter-btn{appearance:none;border:1px solid rgba(18,59,102,.18);background:#fff;color:var(--blue);padding:8px 10px;border-radius:10px;font-weight:800;cursor:pointer}
+.month-filter-btn.active{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;border-color:transparent}
+.series-filter-bar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(90deg,rgba(11,42,74,.04),rgba(212,175,55,.10));box-shadow:0 8px 18px rgba(0,0,0,.04)}
+.series-filter-label{font-weight:900;color:var(--blue);margin-right:2px}
+.series-filter-btn{appearance:none;border:1px solid rgba(18,59,102,.16);padding:9px 12px;border-radius:999px;font-weight:900;cursor:pointer;background:#fff;color:var(--blue);box-shadow:0 6px 14px rgba(0,0,0,.04);transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease}
+.series-filter-btn:hover{transform:translateY(-1px);box-shadow:0 10px 18px rgba(0,0,0,.08)}
+.series-filter-btn.active{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;border-color:transparent;box-shadow:0 10px 18px rgba(11,42,74,.16)}
+.series-filter-btn.all{background:linear-gradient(135deg,#fff,#f6f8fb)}
+.series-filter-count{display:inline-block;margin-left:6px;padding:2px 7px;border-radius:999px;background:rgba(255,255,255,.72);color:var(--blue);font-size:11px;font-weight:900}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <h1>Gruppenserien-Report</h1>
-    <div class="sub">V21 • Managementübersicht für Gruppenserien • stärkere Serienfarben • Vorjahr einklappbar • Serie löschen • Code 1:1 kopieren</div>
   </header>
 
   <div class="toolbar">
@@ -123,7 +133,6 @@ th{background:#eef3f9;color:var(--blue);font-weight:900}
     <button class="btn gold" onclick="printOnly('monthlyPrint','Monatsvergleich')">Monatsvergleich drucken</button>
     <button class="btn gold" onclick="printOnly('seriesPrint','Management-Ansicht pro Serie')">Serienansicht drucken</button>
     <button class="btn secondary" onclick="clearDashboard()">Tabelle leeren</button>
-    <button class="btn secondary" onclick="copyFullCodeWithState()">Code 1:1 kopieren</button>
     <button class="btn secondary" onclick="exportDashboardData()">Daten exportieren</button>
     <button class="btn secondary" onclick="importDashboardData()">Daten importieren</button>
     <input type="file" id="importDashboardFile" accept=".json" style="display:none">
@@ -152,7 +161,7 @@ th{background:#eef3f9;color:var(--blue);font-weight:900}
   <div class="kpi"><div class="t">Monate mit Daten 2026</div><div class="v" id="kpiMonths2026">0</div><div class="s">Jan–Dez</div></div>
   <div class="kpi"><div class="t">Room Revenue 2026</div><div class="v mono" id="kpiRoomRevenue2026">0.00</div><div class="s">nur 2026</div></div>
   <div class="kpi"><div class="t">Room Nights 2026</div><div class="v mono" id="kpiRoomNights2026">0</div><div class="s">nur 2026</div></div>
-  <div class="kpi"><div class="t">F&B Revenue 2026</div><div class="v mono" id="kpiFBRevenue2026">0.00</div><div class="s">nur 2026</div></div>
+  <div class="kpi"><div class="t">F&amp;B Revenue 2026</div><div class="v mono" id="kpiFBRevenue2026">0.00</div><div class="s">nur 2026</div></div>
   <div class="kpi"><div class="t">Block ADR 2026</div><div class="v mono" id="kpiAdr2026">0.00</div><div class="s">nur 2026</div></div>
 </div>
 
@@ -163,7 +172,7 @@ th{background:#eef3f9;color:var(--blue);font-weight:900}
   <div class="kpi"><div class="t">Monate mit Daten 2025</div><div class="v" id="kpiMonths2025">0</div><div class="s">Jan–Dez</div></div>
   <div class="kpi"><div class="t">Room Revenue 2025</div><div class="v mono" id="kpiRoomRevenue2025">0.00</div><div class="s">nur 2025</div></div>
   <div class="kpi"><div class="t">Room Nights 2025</div><div class="v mono" id="kpiRoomNights2025">0</div><div class="s">nur 2025</div></div>
-  <div class="kpi"><div class="t">F&B Revenue 2025</div><div class="v mono" id="kpiFBRevenue2025">0.00</div><div class="s">nur 2025</div></div>
+  <div class="kpi"><div class="t">F&amp;B Revenue 2025</div><div class="v mono" id="kpiFBRevenue2025">0.00</div><div class="s">nur 2025</div></div>
   <div class="kpi"><div class="t">Block ADR 2025</div><div class="v mono" id="kpiAdr2025">0.00</div><div class="s">nur 2025</div></div>
 </div>
 
@@ -177,7 +186,7 @@ th{background:#eef3f9;color:var(--blue);font-weight:900}
         <button class="btn secondary" onclick="printOnly('pivotPrint','Pivot Übersicht')">Drucken</button>
       </div>
     </div>
-    <div id="pivotWrap" class="content">
+    <div id="pivotWrap" class="content hidden">
       <div class="ctrlbox" style="margin-bottom:12px">
         <label for="pivotMetric">Kennzahl</label>
         <select id="pivotMetric">
@@ -224,7 +233,8 @@ th{background:#eef3f9;color:var(--blue);font-weight:900}
         <button class="btn secondary" onclick="printOnly('monthlyPrint','Monatsvergleich')">Drucken</button>
       </div>
     </div>
-    <div id="monthlyWrap" class="content">
+    <div id="monthlyWrap" class="content hidden">
+      <div id="monthFilterBar" style="margin-bottom:14px;display:flex;flex-wrap:wrap;gap:8px"></div>
       <div id="monthlyPrint" class="month-stack"></div></div>
     </div>
   </div>
@@ -237,7 +247,7 @@ th{background:#eef3f9;color:var(--blue);font-weight:900}
         <button class="btn secondary" onclick="printOnly('top3Print','Top 3 Gruppen pro Monat')">Drucken</button>
       </div>
     </div>
-    <div id="top3Wrap" class="content"><div id="top3Print">
+    <div id="top3Wrap" class="content hidden"><div id="top3Print">
       <div class="table-wrap">
         <table>
           <thead><tr><th>Monat</th><th>🥇 Gruppe</th><th>Revenue</th><th>🥈 Gruppe</th><th>Revenue</th><th>🥉 Gruppe</th><th>Revenue</th></tr></thead>
@@ -255,7 +265,8 @@ th{background:#eef3f9;color:var(--blue);font-weight:900}
         <button class="btn secondary" onclick="printOnly('seriesPrint','Management-Ansicht pro Serie')">Drucken</button>
       </div>
     </div>
-    <div id="seriesWrap" class="content">
+    <div id="seriesWrap" class="content hidden">
+      <div id="seriesFilterBar" class="series-filter-bar"></div>
       <div id="seriesPrint" class="series-grid"></div></div>
     </div>
   </div>
@@ -266,6 +277,8 @@ const STORAGE_DATA = "pms_dashboard_v18_store";
 const STORAGE_PROFILE = "pms_dashboard_v18_profile_fields";
 const STORAGE_NATIONALITY = "pms_dashboard_v23_nationality";
 const STORAGE_PIVOT = "pms_dashboard_v18_pivot_state";
+const STORAGE_MONTH_FILTER = "pms_dashboard_v18_month_filter";
+const STORAGE_SERIES_FILTER = "pms_dashboard_v18_series_filter";
 const monthNames = ["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
 const seriesCreamColors = ["#f6e7a8","#dce9f8","#dcefdc","#f6d9e8","#f4e1b7","#d6e6f5","#d9edd2","#f4d6dd","#efe0a6","#d9eaf2","#e2f0d0","#f2d7e6"];
 let seriesStore = {};
@@ -276,10 +289,22 @@ let nationalityFields = {};
 let collapsedPastYears = {};
 let mergedCorporateMap = {};
 let pivotState = {metric:"roomRevenue", yearMode:"current", viewMode:"monthsSeries", seriesMode:"all"};
+let activeMonthFilter = "all";
+let activeSeriesFilter = "all";
 
 try{
   const saved = JSON.parse(localStorage.getItem(STORAGE_PIVOT)||"null");
   if(saved) pivotState = {...pivotState, ...saved};
+}catch(e){}
+
+try{
+  const savedMonthFilter = localStorage.getItem(STORAGE_MONTH_FILTER);
+  if(savedMonthFilter !== null) activeMonthFilter = savedMonthFilter;
+}catch(e){}
+
+try{
+  const savedSeriesFilter = localStorage.getItem(STORAGE_SERIES_FILTER);
+  if(savedSeriesFilter !== null) activeSeriesFilter = savedSeriesFilter;
 }catch(e){}
 
 function fmt(n){ return Number(n || 0).toLocaleString("de-CH",{minimumFractionDigits:2,maximumFractionDigits:2}); }
@@ -295,6 +320,10 @@ function printOnly(id,title){
   th{background:#eef3f9;color:#123b66}.left{text-align:left}
   @page{size:A4 landscape;margin:8mm}
   .btnrow{display:flex;gap:10px;flex-wrap:nowrap;align-items:center}
+
+.month-filter-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;align-items:center}
+.month-filter-btn{appearance:none;border:1px solid rgba(18,59,102,.18);background:#fff;color:var(--blue);padding:8px 10px;border-radius:10px;font-weight:800;cursor:pointer}
+.month-filter-btn.active{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;border-color:transparent}
 </style></head><body><h2>${title}</h2>${content}</body></html>`);
   win.document.close(); win.focus(); win.print();
 }
@@ -305,6 +334,8 @@ function loadProfiles(){ try{ profileFields = JSON.parse(localStorage.getItem(ST
 function saveNationality(){ localStorage.setItem(STORAGE_NATIONALITY, JSON.stringify(nationalityFields)); }
 function loadNationality(){ try{ nationalityFields = JSON.parse(localStorage.getItem(STORAGE_NATIONALITY)||"{}") || {}; }catch(e){ nationalityFields = {}; } }
 function savePivot(){ localStorage.setItem(STORAGE_PIVOT, JSON.stringify(pivotState)); }
+function saveMonthFilter(){ localStorage.setItem(STORAGE_MONTH_FILTER, activeMonthFilter); }
+function saveSeriesFilter(){ localStorage.setItem(STORAGE_SERIES_FILTER, activeSeriesFilter); }
 function blankMonths(){ return monthNames.map(() => ({cur:{roomRevenue:0,roomNights:0,fbRevenue:0,blockAdr:0,fbpp:0},ly:{roomRevenue:0,roomNights:0,fbRevenue:0,blockAdr:0,fbpp:0},hasLY:false})); }
 function monthIndexFromValue(v){ const n = Number(v); return Number.isFinite(n) && n>=1 && n<=12 ? n-1 : -1; }
 function cleanCorporateId(raw){ const s=String(raw||""); const m=s.match(/Corporate\s*ID\s*:\s*(\d+)/i)||s.match(/CorporateID\s*:\s*(\d+)/i)||s.match(/(\d{5,})/); return m?m[1]:""; }
@@ -472,10 +503,30 @@ function renderPivot(){
   }
 }
 
+function renderMonthFilterBar(){
+  const bar = document.getElementById("monthFilterBar");
+  if(!bar) return;
+  const visibleMonths = buildMonthlySummary().filter(m=>m.cur.roomRevenue||m.cur.roomNights||m.cur.fbRevenue);
+  const hasVisibleMonths = visibleMonths.length > 0;
+  const monthButtons = visibleMonths.map(m => `<button class="month-filter-btn ${String(activeMonthFilter)===String(m.idx)?"active":""}" data-month="${m.idx}">${m.month}</button>`).join("");
+  bar.innerHTML = `<button class="month-filter-btn ${activeMonthFilter==="all"?"active":""}" data-month="all">Alle</button>${monthButtons}`;
+  if(!hasVisibleMonths){
+    activeMonthFilter = "all";
+    saveMonthFilter();
+    bar.innerHTML = `<button class="month-filter-btn active" data-month="all">Alle</button>`;
+  }
+  bar.querySelectorAll(".month-filter-btn").forEach(btn => btn.addEventListener("click", function(){
+    activeMonthFilter = this.getAttribute("data-month");
+    saveMonthFilter();
+    renderMonthlyBlocks();
+    renderMonthFilterBar();
+  }));
+}
+
 function renderMonthlyBlocks(){
   const wrap=document.getElementById("monthlyPrint");
   const summary=buildMonthlySummary();
-  wrap.innerHTML=summary.filter(m=>m.cur.roomRevenue||m.cur.roomNights||m.cur.fbRevenue).map(m=>{
+  wrap.innerHTML=summary.filter(m=>{ if(activeMonthFilter!=="all" && Number(activeMonthFilter)!==m.idx) return false; return m.cur.roomRevenue||m.cur.roomNights||m.cur.fbRevenue; }).map(m=>{
     const visible=seriesData.filter(s=>{const x=s.months[m.idx]; return x.cur.roomRevenue||x.cur.roomNights||x.cur.fbRevenue;}).sort((a,b)=>(b.months[m.idx].cur.roomRevenue||0)-(a.months[m.idx].cur.roomRevenue||0));
     const rows=visible.map(s=>{ const x=s.months[m.idx]; return `<tr>
       <td class="series-cell">${isTop3(s.series,m.idx)?"🏆 ":""}${escapeHtml(s.series)}<div class="corp">CorporateID: ${escapeHtml(s.corporateId||"–")}</div></td>
@@ -485,10 +536,18 @@ function renderMonthlyBlocks(){
       <td class="mono">${fmt(x.cur.fbpp)}</td><td class="mono">${x.hasLY?fmt(x.ly.fbpp):"–"}</td><td class="mono ${diffClass(x.cur.fbpp,x.ly.fbpp,x.hasLY)}">${x.hasLY?fmt(x.cur.fbpp-x.ly.fbpp):"–"}</td><td class="mono ${diffClass(x.cur.fbpp,x.ly.fbpp,x.hasLY)}">${pct(x.cur.fbpp,x.ly.fbpp,x.hasLY)}</td>
       <td class="mono">${fmt(x.cur.blockAdr)}</td><td class="mono">${x.hasLY?fmt(x.ly.blockAdr):"–"}</td><td class="mono ${diffClass(x.cur.blockAdr,x.ly.blockAdr,x.hasLY)}">${x.hasLY?fmt(x.cur.blockAdr-x.ly.blockAdr):"–"}</td><td class="mono ${diffClass(x.cur.blockAdr,x.ly.blockAdr,x.hasLY)}">${pct(x.cur.blockAdr,x.ly.blockAdr,x.hasLY)}</td>
     </tr>`; }).join("");
+    const totalRow = `<tr style="background:#f6f8fb;font-weight:900">
+      <td class="series-cell">Gesamttotal</td>
+      <td class="mono">${fmt(m.cur.roomRevenue)}</td><td class="mono">${m.hasLY?fmt(m.ly.roomRevenue):"–"}</td><td class="mono ${diffClass(m.cur.roomRevenue,m.ly.roomRevenue,m.hasLY)}">${m.hasLY?fmt(m.cur.roomRevenue-m.ly.roomRevenue):"–"}</td><td class="mono ${diffClass(m.cur.roomRevenue,m.ly.roomRevenue,m.hasLY)}">${pct(m.cur.roomRevenue,m.ly.roomRevenue,m.hasLY)}</td>
+      <td class="mono">${fmt0(m.cur.roomNights)}</td><td class="mono">${m.hasLY?fmt0(m.ly.roomNights):"–"}</td><td class="mono ${diffClass(m.cur.roomNights,m.ly.roomNights,m.hasLY)}">${m.hasLY?fmt0(m.cur.roomNights-m.ly.roomNights):"–"}</td><td class="mono ${diffClass(m.cur.roomNights,m.ly.roomNights,m.hasLY)}">${pct(m.cur.roomNights,m.ly.roomNights,m.hasLY)}</td>
+      <td class="mono">${fmt(m.cur.fbRevenue)}</td><td class="mono">${m.hasLY?fmt(m.ly.fbRevenue):"–"}</td><td class="mono ${diffClass(m.cur.fbRevenue,m.ly.fbRevenue,m.hasLY)}">${m.hasLY?fmt(m.cur.fbRevenue-m.ly.fbRevenue):"–"}</td><td class="mono ${diffClass(m.cur.fbRevenue,m.ly.fbRevenue,m.hasLY)}">${pct(m.cur.fbRevenue,m.ly.fbRevenue,m.hasLY)}</td>
+      <td class="mono">${fmt(m.cur.fbpp)}</td><td class="mono">${m.hasLY?fmt(m.ly.fbpp):"–"}</td><td class="mono ${diffClass(m.cur.fbpp,m.ly.fbpp,m.hasLY)}">${m.hasLY?fmt(m.cur.fbpp-m.ly.fbpp):"–"}</td><td class="mono ${diffClass(m.cur.fbpp,m.ly.fbpp,m.hasLY)}">${pct(m.cur.fbpp,m.ly.fbpp,m.hasLY)}</td>
+      <td class="mono">${fmt(m.cur.blockAdr)}</td><td class="mono">${m.hasLY?fmt(m.ly.blockAdr):"–"}</td><td class="mono ${diffClass(m.cur.blockAdr,m.ly.blockAdr,m.hasLY)}">${m.hasLY?fmt(m.cur.blockAdr-m.ly.blockAdr):"–"}</td><td class="mono ${diffClass(m.cur.blockAdr,m.ly.blockAdr,m.hasLY)}">${pct(m.cur.blockAdr,m.ly.blockAdr,m.hasLY)}</td>
+    </tr>`;
     return `<div class="month-card"><div class="month-head"><div><div class="month-title">${m.month} ${currentYear||""}</div><div class="month-sub">Zusammenfassung aller Gruppen im selben Monat</div></div><div class="month-chips"><div class="month-chip">${visible.length} Gruppen</div><div class="month-chip">Top 3 markiert</div></div></div>
       <table class="matrix"><thead><tr><th class="seriehead left" rowspan="2">Serie</th><th colspan="4">Room Revenue</th><th colspan="4">Room Nights</th><th colspan="4">F&amp;B Revenue</th><th colspan="4">F&amp;B / Guest</th><th colspan="4">Block Room ADR</th></tr>
       <tr><th class="kpi-cur">Aktuell</th><th class="kpi-ly">LY</th><th class="kpi-d">Δ</th><th class="kpi-p">Δ%</th><th class="kpi-cur">Aktuell</th><th class="kpi-ly">LY</th><th class="kpi-d">Δ</th><th class="kpi-p">Δ%</th><th class="kpi-cur">Aktuell</th><th class="kpi-ly">LY</th><th class="kpi-d">Δ</th><th class="kpi-p">Δ%</th><th class="kpi-cur">Aktuell</th><th class="kpi-ly">LY</th><th class="kpi-d">Δ</th><th class="kpi-p">Δ%</th><th class="kpi-cur">Aktuell</th><th class="kpi-ly">LY</th><th class="kpi-d">Δ</th><th class="kpi-p">Δ%</th></tr></thead>
-      <tbody>${rows}</tbody></table></div>`;
+      <tbody>${rows}${totalRow}</tbody></table></div>`;
   }).join("");
 }
 
@@ -621,9 +680,33 @@ function deleteSeriesByKey(key){
   saveProfiles();
   renderAll();
 }
+function renderSeriesFilterBar(){
+  const bar = document.getElementById("seriesFilterBar");
+  if(!bar) return;
+  const available = seriesData.filter(s=>s.months.some(m=>(m.cur.roomRevenue||0)!==0 || (m.cur.roomNights||0)!==0 || (m.cur.fbRevenue||0)!==0 || (m.cur.blockAdr||0)!==0 || (m.cur.fbpp||0)!==0 || (m.ly.roomRevenue||0)!==0 || (m.ly.roomNights||0)!==0 || (m.ly.fbRevenue||0)!==0 || (m.ly.blockAdr||0)!==0 || (m.ly.fbpp||0)!==0));
+  if(activeSeriesFilter !== "all" && !available.some(s=>s.key===activeSeriesFilter)){
+    activeSeriesFilter = "all";
+    saveSeriesFilter();
+  }
+  const allButton = `<button class="series-filter-btn all ${activeSeriesFilter==="all"?"active":""}" data-series-filter="all">Alle<span class="series-filter-count">${available.length}</span></button>`;
+  const seriesButtons = available.map(s => {
+    const total = seriesTotal(s);
+    const color = getSeriesColorByKey(s.key);
+    return `<button class="series-filter-btn ${activeSeriesFilter===s.key?"active":""}" data-series-filter="${escapeHtml(s.key)}" style="background:${activeSeriesFilter===s.key?"linear-gradient(135deg,var(--blue),var(--blue2))":color};color:${activeSeriesFilter===s.key?"#fff":"var(--blue)"};border-color:${activeSeriesFilter===s.key?"transparent":"rgba(18,59,102,.14)"}">${escapeHtml(s.series)}<span class="series-filter-count" style="color:${activeSeriesFilter===s.key?"var(--blue)":"var(--blue)"}">${fmt0(total.roomNights)}</span></button>`;
+  }).join("");
+  bar.innerHTML = `<div class="series-filter-label">Serienwahl:</div>${allButton}${seriesButtons}`;
+  bar.querySelectorAll(".series-filter-btn").forEach(btn=>btn.addEventListener("click", function(){
+    activeSeriesFilter = this.getAttribute("data-series-filter") || "all";
+    saveSeriesFilter();
+    renderSeriesFilterBar();
+    renderSeriesBlocks();
+  }));
+}
+
 function renderSeriesBlocks(){
   const wrap=document.getElementById("seriesPrint");
-  wrap.innerHTML=seriesData.map((s, index)=>{ 
+  const visibleSeries = activeSeriesFilter === "all" ? seriesData : seriesData.filter(s => s.key === activeSeriesFilter);
+  wrap.innerHTML=visibleSeries.map((s, index)=>{ 
     const totalCur=seriesTotal(s);
     const totalLY = s.months.reduce((a,m)=>{ a.roomRevenue += m.ly.roomRevenue||0; a.roomNights += m.ly.roomNights||0; a.fbRevenue += m.ly.fbRevenue||0; return a; }, {roomRevenue:0,roomNights:0,fbRevenue:0});
     const profile2025=getProfile(s.key,"2025");
@@ -760,8 +843,10 @@ function renderAll(){
   renderKpis();
   refreshMergeSelectors();
   renderPivot();
+  renderMonthFilterBar();
   renderMonthlyBlocks();
   renderTop3();
+  renderSeriesFilterBar();
   renderSeriesBlocks();
 }
 
@@ -895,45 +980,6 @@ document.getElementById("fileInput").addEventListener("change", async function(e
   }
   e.target.value="";
 });
-
-function copyFullCodeWithState(){
-  try{
-    const storeJson = JSON.stringify(seriesStore).replace(/</g,"\\u003c");
-    const profilesJson = JSON.stringify(profileFields).replace(/</g,"\\u003c");
-    const collapsedJson = JSON.stringify(collapsedPastYears).replace(/</g,"\\u003c");
-    const pivotJson = JSON.stringify(pivotState).replace(/</g,"\\u003c");
-
-    let fullHtml = document.documentElement.outerHTML;
-
-    const openScript = "<scr" + "ipt>";
-    const closeScript = "<" + "/scr" + "ipt>";
-    const inject =
-      openScript +
-      "localStorage.setItem('pms_dashboard_v18_store'," + JSON.stringify(storeJson) + ");" +
-      "localStorage.setItem('pms_dashboard_v18_profile_fields'," + JSON.stringify(profilesJson) + ");" +
-      "localStorage.setItem('pms_dashboard_v18_collapsed_years'," + JSON.stringify(collapsedJson) + ");" +
-      "localStorage.setItem('pms_dashboard_v18_pivot_state'," + JSON.stringify(pivotJson) + ");" +
-      closeScript +
-      "</body>";
-
-    fullHtml = fullHtml.replace("</body>", inject);
-
-    navigator.clipboard.writeText(fullHtml).then(function(){
-      alert("Der komplette Code mit deinem aktuellen Stand wurde in die Zwischenablage kopiert.");
-    }).catch(function(){
-      const ta = document.createElement("textarea");
-      ta.value = fullHtml;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand("copy");
-      ta.remove();
-      alert("Der komplette Code mit deinem aktuellen Stand wurde in die Zwischenablage kopiert.");
-    });
-  }catch(e){
-    alert("Kopieren hat leider nicht funktioniert.");
-  }
-}
-
 
 function exportDashboardData(){
   try{
