@@ -152,10 +152,10 @@ th{background:#eef3f9;color:var(--blue);font-weight:900}
 .month-granditem .vals{margin-top:4px;font-size:12px;font-weight:900;line-height:1.35}
 .group-month-stack{display:flex;flex-direction:column;gap:22px}
 .group-compare-wrap{width:100%;overflow:visible;padding-bottom:2px;display:flex;justify-content:center;margin:0 auto}
-.group-compare-table{width:min(1580px,100%);min-width:0;table-layout:fixed;margin:0 auto}
+.group-compare-table{width:min(1700px,100%);min-width:0;table-layout:fixed;margin:0 auto}
 .group-compare-table th,.group-compare-table td{font-size:12px;padding:9px 8px;border:1.5px solid #b8c6d8;white-space:nowrap}
 .group-compare-table thead tr:first-child th{background:linear-gradient(180deg,#ede7d5,#e4decd);font-size:12px}
-.group-compare-table .group-name-head{background:#e9e1e6 !important;width:180px}
+.group-compare-table .group-name-head{background:#e9e1e6 !important;width:220px}
 .group-compare-table .year25-head,.group-compare-table .year25-cell{background:#f6f1df}
 .group-compare-table .year26-head,.group-compare-table .year26-cell{background:#e6eff9}
 .group-compare-table .mid-divider{border-left:4px solid #7d94b8 !important}
@@ -170,12 +170,12 @@ th{background:#eef3f9;color:var(--blue);font-weight:900}
 .toolbar-main-actions .btn.secondary:hover,
 .queue-toolbar .btn.secondary:hover{transform:translateY(-1px)}
 .group-month-stack{display:flex;flex-direction:column;gap:22px;width:100%;max-width:none;margin:0 auto}
-.group-month-stack > .month-card{width:min(1640px,96%);margin:0 auto}
-.group-month-layout{display:flex;flex-direction:column;gap:18px;align-items:center;justify-content:center;width:100%;max-width:1640px;margin:0 auto}
+.group-month-stack > .month-card{width:min(1720px,98%);margin:0 auto}
+.group-month-layout{display:flex;flex-direction:column;gap:18px;align-items:center;justify-content:center;width:100%;max-width:1720px;margin:0 auto}
 .group-month-layout > div:first-child{min-width:0;width:100%;display:flex;justify-content:center}
-.group-comment-box{border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,#fafcff,#f3f7fc);padding:16px;box-shadow:0 8px 18px rgba(0,0,0,.04);width:min(1640px,100%);margin:0 auto}
+.group-comment-box{border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,#fafcff,#f3f7fc);padding:16px;box-shadow:0 8px 18px rgba(0,0,0,.04);width:min(1720px,100%);margin:0 auto}
 .group-comment-title{font-weight:900;color:var(--blue);margin-bottom:10px;font-size:16px}
-.group-comment-box textarea{width:100%;min-height:190px;resize:vertical;border:1px solid rgba(18,59,102,.18);border-radius:12px;padding:12px;background:#fff;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.45}
+.group-comment-box textarea{width:100%;min-height:230px;resize:vertical;border:1px solid rgba(18,59,102,.18);border-radius:12px;padding:14px 16px;background:#fff;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.5}
 .group-comment-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .group-comment-actions .btn.secondary{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;border:1px solid transparent}
 .group-month-center{width:100%;margin:0 auto;display:flex;justify-content:center}
@@ -2235,60 +2235,84 @@ function renderGroupMonthFilterBar(type, entries){
 }
 
 function renderYearSplitMonthTable(entries, type, monthIdx){
-  const sorted = entries.slice().sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),"de"));
-  const osMatchMap = type === "OS" ? buildOsMatchMap(sorted, monthIdx) : {};
-  const rows = sorted.map(g => {
-    const y25 = getGroupValueForYearMonth(g,"2025",monthIdx);
-    const y26 = getGroupValueForYearMonth(g,"2026",monthIdx);
-    const matched = !!osMatchMap[g.key];
-    const nameClass = matched ? 'match-name' : '';
-    const cell25Class = `mono year25-cell ${matched ? 'match-cell-25' : ''}`.trim();
-    const cell26Class = `mono year26-cell mid-divider ${matched ? 'match-cell-26' : ''}`.trim();
-    const cell26OtherClass = `mono year26-cell ${matched ? 'match-cell-26' : ''}`.trim();
-    const nameHint = matched ? `<div class="small">ähnlich in 2025 / 2026 erkannt</div>` : '';
+  const list25 = entries
+    .map(g => ({entry:g, value:getGroupValueForYearMonth(g,"2025",monthIdx)}))
+    .filter(x => hasMeaningfulGroupMonthData(x.value))
+    .sort((a,b)=>String(a.entry.name||"").localeCompare(String(b.entry.name||""),"de"));
+  const list26 = entries
+    .map(g => ({entry:g, value:getGroupValueForYearMonth(g,"2026",monthIdx)}))
+    .filter(x => hasMeaningfulGroupMonthData(x.value))
+    .sort((a,b)=>String(a.entry.name||"").localeCompare(String(b.entry.name||""),"de"));
+
+  const match25 = new Set();
+  const match26 = new Set();
+  if(type === "OS"){
+    const norm25 = new Map();
+    list25.forEach(x => { const k = normalizeGroupMatchName(x.entry.name); if(k) norm25.set(k, x.entry.key); });
+    list26.forEach(x => {
+      const k = normalizeGroupMatchName(x.entry.name);
+      if(k && norm25.has(k)){
+        match25.add(norm25.get(k));
+        match26.add(x.entry.key);
+      }
+    });
+  }
+
+  const maxLen = Math.max(list25.length, list26.length, 1);
+  const rows = Array.from({length:maxLen}, (_, i) => {
+    const l = list25[i];
+    const r = list26[i];
+    const leftMatch = l && match25.has(l.entry.key);
+    const rightMatch = r && match26.has(r.entry.key);
+    const leftName = l ? `${escapeHtml(l.entry.name)}${l.entry.corporateId?`<div class="corp">CorporateID: ${escapeHtml(l.entry.corporateId)}</div>`:""}${leftMatch?`<div class="small">ähnlich erkannt</div>`:""}` : '–';
+    const rightName = r ? `${escapeHtml(r.entry.name)}${r.entry.corporateId?`<div class="corp">CorporateID: ${escapeHtml(r.entry.corporateId)}</div>`:""}${rightMatch?`<div class="small">ähnlich erkannt</div>`:""}` : '–';
     return `<tr>
-      <td class="left series-cell ${nameClass}">${escapeHtml(g.name)}${g.corporateId?`<div class="corp">CorporateID: ${escapeHtml(g.corporateId)}</div>`:""}${nameHint}</td>
-      <td class="${cell25Class}">${formatMaybeValue(y25,'roomRevenue',fmt)}</td>
-      <td class="${cell25Class}">${formatMaybeValue(y25,'roomNights',fmt0)}</td>
-      <td class="${cell25Class}">${formatMaybeValue(y25,'fbRevenue',fmt)}</td>
-      <td class="${cell25Class}">${formatMaybeValue(y25,'blockAdr',fmt)}</td>
-      <td class="${cell26Class}">${formatMaybeValue(y26,'roomRevenue',fmt)}</td>
-      <td class="${cell26OtherClass}">${formatMaybeValue(y26,'roomNights',fmt0)}</td>
-      <td class="${cell26OtherClass}">${formatMaybeValue(y26,'fbRevenue',fmt)}</td>
-      <td class="${cell26OtherClass}">${formatMaybeValue(y26,'blockAdr',fmt)}</td>
+      <td class="left series-cell year25-cell ${leftMatch ? 'match-name' : ''}">${leftName}</td>
+      <td class="mono year25-cell ${leftMatch ? 'match-cell-25' : ''}">${l?fmt(l.value.roomRevenue||0):'–'}</td>
+      <td class="mono year25-cell ${leftMatch ? 'match-cell-25' : ''}">${l?fmt0(l.value.roomNights||0):'–'}</td>
+      <td class="mono year25-cell ${leftMatch ? 'match-cell-25' : ''}">${l?fmt(l.value.fbRevenue||0):'–'}</td>
+      <td class="mono year25-cell ${leftMatch ? 'match-cell-25' : ''}">${l?fmt(l.value.blockAdr||0):'–'}</td>
+      <td class="left series-cell year26-cell mid-divider ${rightMatch ? 'match-name' : ''}">${rightName}</td>
+      <td class="mono year26-cell ${rightMatch ? 'match-cell-26' : ''}">${r?fmt(r.value.roomRevenue||0):'–'}</td>
+      <td class="mono year26-cell ${rightMatch ? 'match-cell-26' : ''}">${r?fmt0(r.value.roomNights||0):'–'}</td>
+      <td class="mono year26-cell ${rightMatch ? 'match-cell-26' : ''}">${r?fmt(r.value.fbRevenue||0):'–'}</td>
+      <td class="mono year26-cell ${rightMatch ? 'match-cell-26' : ''}">${r?fmt(r.value.blockAdr||0):'–'}</td>
     </tr>`;
   }).join("");
-  const total25 = sorted.reduce((a,g)=>{ const m=getGroupValueForYearMonth(g,"2025",monthIdx); a.roomRevenue+=m.roomRevenue||0; a.roomNights+=m.roomNights||0; a.fbRevenue+=m.fbRevenue||0; a.blockAdrSum+=m.blockAdr||0; if((m.blockAdr||0)||(m.roomNights||0)) a.count++; return a; }, {roomRevenue:0,roomNights:0,fbRevenue:0,blockAdrSum:0,count:0});
-  const total26 = sorted.reduce((a,g)=>{ const m=getGroupValueForYearMonth(g,"2026",monthIdx); a.roomRevenue+=m.roomRevenue||0; a.roomNights+=m.roomNights||0; a.fbRevenue+=m.fbRevenue||0; a.blockAdrSum+=m.blockAdr||0; if((m.blockAdr||0)||(m.roomNights||0)) a.count++; return a; }, {roomRevenue:0,roomNights:0,fbRevenue:0,blockAdrSum:0,count:0});
+
+  const total25 = list25.reduce((a,x)=>{ const m=x.value; a.roomRevenue+=m.roomRevenue||0; a.roomNights+=m.roomNights||0; a.fbRevenue+=m.fbRevenue||0; a.blockAdrSum+=m.blockAdr||0; if((m.blockAdr||0)||(m.roomNights||0)) a.count++; return a; }, {roomRevenue:0,roomNights:0,fbRevenue:0,blockAdrSum:0,count:0});
+  const total26 = list26.reduce((a,x)=>{ const m=x.value; a.roomRevenue+=m.roomRevenue||0; a.roomNights+=m.roomNights||0; a.fbRevenue+=m.fbRevenue||0; a.blockAdrSum+=m.blockAdr||0; if((m.blockAdr||0)||(m.roomNights||0)) a.count++; return a; }, {roomRevenue:0,roomNights:0,fbRevenue:0,blockAdrSum:0,count:0});
   const totalRow = `<tr class="total-row">
-    <td class="left">Gesamttotal</td>
+    <td class="left year25-cell">Gesamttotal 2025</td>
     <td class="mono year25-cell">${fmt(total25.roomRevenue)}</td>
     <td class="mono year25-cell">${fmt0(total25.roomNights)}</td>
     <td class="mono year25-cell">${fmt(total25.fbRevenue)}</td>
     <td class="mono year25-cell">${fmt(total25.count ? total25.blockAdrSum/total25.count : 0)}</td>
-    <td class="mono year26-cell mid-divider">${fmt(total26.roomRevenue)}</td>
+    <td class="left year26-cell mid-divider">Gesamttotal 2026</td>
+    <td class="mono year26-cell">${fmt(total26.roomRevenue)}</td>
     <td class="mono year26-cell">${fmt0(total26.roomNights)}</td>
     <td class="mono year26-cell">${fmt(total26.fbRevenue)}</td>
     <td class="mono year26-cell">${fmt(total26.count ? total26.blockAdrSum/total26.count : 0)}</td>
   </tr>`;
+
   return `<div class="group-compare-wrap"><table class="group-compare-table">
     <colgroup>
-      <col style="width:30%">
-      <col style="width:8.75%"><col style="width:8.75%"><col style="width:8.75%"><col style="width:8.75%">
-      <col style="width:8.75%"><col style="width:8.75%"><col style="width:8.75%"><col style="width:8.75%">
+      <col style="width:22%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%">
+      <col style="width:22%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%">
     </colgroup>
     <thead>
       <tr>
-        <th class="group-name-head left" rowspan="2">${type} Group</th>
-        <th class="year25-head" colspan="4">2025</th>
-        <th class="year26-head mid-divider" colspan="4">2026</th>
+        <th class="group-name-head left year25-head" colspan="5">${type} Groups 2025</th>
+        <th class="group-name-head left year26-head mid-divider" colspan="5">${type} Groups 2026</th>
       </tr>
       <tr>
+        <th class="year25-head left">${type} Group</th>
         <th class="year25-head">Room Revenue</th>
         <th class="year25-head">Room Nights</th>
         <th class="year25-head">F&amp;B Revenue</th>
         <th class="year25-head">Block ADR</th>
-        <th class="year26-head mid-divider">Room Revenue</th>
+        <th class="year26-head left mid-divider">${type} Group</th>
+        <th class="year26-head">Room Revenue</th>
         <th class="year26-head">Room Nights</th>
         <th class="year26-head">F&amp;B Revenue</th>
         <th class="year26-head">Block ADR</th>
