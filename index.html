@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Gruppen Report IBIS MESSE</title>
+<title>Gruppen Report</title>
 <style>
 :root{
   --blue:#123b66; --blue2:#204d7f; --gold:#d4af37; --ink:#1d1d1f; --muted:#667085;
@@ -73,6 +73,10 @@ th{background:#eef3f9;color:var(--blue);font-weight:900}
 .queue-input{min-width:160px}
 .year-toggle{appearance:none;border:1px solid rgba(18,59,102,.18);background:#fff;color:var(--blue);padding:8px 10px;border-radius:10px;font-weight:800;cursor:pointer}
 .delete-series-btn,.delete-group-btn{appearance:none;border:1px solid rgba(217,45,32,.20);background:#fff;color:#b42318;padding:8px 10px;border-radius:10px;font-weight:800;cursor:pointer}
+.mini-delete-btn,.year-delete-btn{appearance:none;border:1px solid rgba(217,45,32,.22);background:#fff;color:#b42318;border-radius:999px;font-weight:900;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;line-height:1;box-shadow:0 4px 10px rgba(0,0,0,.05)}
+.mini-delete-btn{width:22px;height:22px;font-size:12px;margin-left:6px}
+.year-delete-btn{padding:4px 10px;border-radius:999px;font-size:11px;margin-left:8px}
+.mini-delete-btn:hover,.year-delete-btn:hover{transform:translateY(-1px);box-shadow:0 6px 12px rgba(0,0,0,.08)}
 .series-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid var(--line)}
 .series-title{font-size:18px;font-weight:900;color:var(--blue)}
 .series-sub{margin-top:4px;font-size:12px;color:var(--muted)}
@@ -184,7 +188,16 @@ th{background:#eef3f9;color:var(--blue);font-weight:900}
 .group-name-content{min-width:0;flex:1}
 .group-comment-actions .btn.secondary{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;border:1px solid transparent}
 .group-month-center{width:100%;margin:0 auto;display:flex;justify-content:center}
-.budget-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.budget-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;max-width:100%;overflow:hidden}
+.budget-card{min-width:0}
+.budget-card table{table-layout:fixed;width:100%}
+.budget-card th,.budget-card td{white-space:normal;font-size:12px;padding:7px 6px;word-break:break-word}
+.section{overflow:hidden}
+.series-mini td.monthcol{white-space:normal}
+.mini-delete-btn,.year-delete-btn{appearance:none;border:1px solid rgba(217,45,32,.28);background:#fff;color:#b42318;cursor:pointer;font-weight:900;box-shadow:0 4px 10px rgba(0,0,0,.05)}
+.mini-delete-btn{width:22px;height:22px;border-radius:999px;line-height:1;padding:0;margin-right:6px;vertical-align:middle;display:inline-flex;align-items:center;justify-content:center}
+.year-delete-btn{margin-left:10px;padding:4px 8px;border-radius:999px;font-size:11px}
+@media (max-width:1100px){.budget-grid{grid-template-columns:1fr}}
 .budget-card{border:1px solid var(--line);border-radius:20px;overflow:hidden;background:#fff;box-shadow:0 8px 18px rgba(0,0,0,.04)}
 .budget-card-head{padding:12px 14px;background:linear-gradient(90deg,rgba(18,59,102,.08),rgba(212,175,55,.10));border-bottom:1px solid var(--line)}
 .budget-card-title{font-size:18px;font-weight:900;color:var(--blue)}
@@ -215,7 +228,7 @@ th{background:#eef3f9;color:var(--blue);font-weight:900}
 <body>
 <div class="wrap">
   <header>
-    <h1>Gruppen Report IBIS MESSE</h1>
+    <h1>Gruppen Report</h1>
   </header>
 
   <div class="toolbar">
@@ -1253,6 +1266,59 @@ function deleteSeriesByKey(key){
   saveProfiles();
   renderAll();
 }
+function hasAnySeriesMonthData(months){
+  return (months || []).some(m => (m.roomRevenue||0)!==0 || (m.roomNights||0)!==0 || (m.fbRevenue||0)!==0 || (m.blockAdr||0)!==0 || (m.fbpp||0)!==0);
+}
+function blankSeriesMonth(){
+  return {roomRevenue:0,roomNights:0,fbRevenue:0,blockAdr:0,fbpp:0};
+}
+function deleteSeriesMonthRow(key, year, monthIdx){
+  const entry = seriesStore[key];
+  if(!entry || monthIdx < 0 || monthIdx > 11) return;
+  const yearStr = String(year || '');
+  const targetMonths = yearStr === String(entry.currentYear||'') ? (entry.currentMonths || []) : (yearStr === String(entry.lyYear||'') ? (entry.lyMonths || []) : null);
+  if(!targetMonths) return;
+  targetMonths[monthIdx] = blankSeriesMonth();
+  saveStore();
+  renderAll();
+}
+function deleteSeriesYear(key, year){
+  const entry = seriesStore[key];
+  if(!entry) return;
+  const yearStr = String(year || '');
+  if(yearStr === String(entry.currentYear||'')){
+    if(entry.lyYear){
+      entry.currentYear = entry.lyYear || '';
+      entry.currentMonths = JSON.parse(JSON.stringify(entry.lyMonths || blankSimpleMonths()));
+      entry.lyYear = '';
+      entry.lyMonths = blankSimpleMonths();
+    }else{
+      entry.currentYear = '';
+      entry.currentMonths = blankSimpleMonths();
+    }
+  }else if(yearStr === String(entry.lyYear||'')){
+    entry.lyYear = '';
+    entry.lyMonths = blankSimpleMonths();
+  }else{
+    return;
+  }
+  if(profileFields[key] && profileFields[key][yearStr]){
+    delete profileFields[key][yearStr];
+    if(!Object.keys(profileFields[key]).length) delete profileFields[key];
+    saveProfiles();
+  }
+  const hasCurrent = hasAnySeriesMonthData(entry.currentMonths || []);
+  const hasLy = hasAnySeriesMonthData(entry.lyMonths || []);
+  if(!hasCurrent && !hasLy){
+    delete seriesStore[key];
+    if(profileFields[key]) delete profileFields[key];
+    if(nationalityFields[key]) delete nationalityFields[key];
+    saveProfiles();
+    saveNationality();
+  }
+  saveStore();
+  renderAll();
+}
 function deleteGroupByKey(type, key){
   if(type === "OT" && otGroupStore[key]){ delete otGroupStore[key]; saveOtGroupStore(); }
   if(type === "OS" && osGroupStore[key]){ delete osGroupStore[key]; saveOsGroupStore(); }
@@ -1333,15 +1399,17 @@ function renderSeriesBlocks(){
     years.forEach(y => {
       const isPast = y && y !== activeYear;
       const hideRows = isPast && collapsePast;
-      yearRows.push(`<tr class="yearbreak"><td colspan="7">${escapeHtml(y)}${hideRows ? " • ausgeblendet" : ""}</td></tr>`);
+      const hasStoredYear = String(y) === String(s.currentYear||"") || String(y) === String(s.lyYear||"");
+      yearRows.push(`<tr class="yearbreak"><td colspan="7">${escapeHtml(y)}${hideRows ? " • ausgeblendet" : ""}${hasStoredYear ? `<button class="year-delete-btn" title="Jahr löschen" data-delete-year-key="${escapeHtml(s.key)}" data-delete-year="${escapeHtml(y)}">× Jahr löschen</button>` : ``}</td></tr>`);
       const sourceMonths = (String(y) === String(s.currentYear)) ? s.months.map(m=>m.cur) :
                            (String(y) === String(s.lyYear)) ? s.months.map(m=>m.ly) :
                            monthNames.map(()=>({roomRevenue:0,roomNights:0,fbRevenue:0,blockAdr:0,fbpp:0}));
       if(!hideRows){
         monthNames.forEach((mn, idx) => {
           const m = sourceMonths[idx] || {roomRevenue:0,roomNights:0,fbRevenue:0,blockAdr:0,fbpp:0};
+          const hasMonthData = (m.roomRevenue||0)!==0 || (m.roomNights||0)!==0 || (m.fbRevenue||0)!==0 || (m.blockAdr||0)!==0 || (m.fbpp||0)!==0;
           yearRows.push(`<tr>
-            <td class="left monthcol">${mn}</td>
+            <td class="left monthcol">${hasStoredYear ? `<button class="mini-delete-btn" title="Monat löschen" data-delete-row-key="${escapeHtml(s.key)}" data-delete-row-year="${escapeHtml(y)}" data-delete-row-month="${idx}">×</button>` : ""}${mn}</td>
             <td class="mono widecol">${fmt(m.roomRevenue||0)}</td>
             <td class="mono widecol">${fmt0(m.roomNights||0)}</td>
             <td class="mono widecol">${fmt(m.fbRevenue||0)}</td>
@@ -1390,6 +1458,7 @@ function renderSeriesBlocks(){
               <th class="narrowcol">F&amp;B / Guest</th>
               <th class="narrowcol">Block ADR</th>
               <th class="widecol">Jahr</th>
+              
             </tr>
           </thead>
           <tbody>${yearRows.join("")}</tbody>
@@ -1440,6 +1509,19 @@ function renderSeriesBlocks(){
   wrap.querySelectorAll(".delete-series-btn").forEach(btn=>btn.addEventListener("click", function(){
     const key = this.getAttribute("data-delete-key");
     deleteSeriesByKey(key);
+  }));
+
+  wrap.querySelectorAll(".mini-delete-btn").forEach(btn=>btn.addEventListener("click", function(){
+    const key = this.getAttribute("data-delete-row-key");
+    const year = this.getAttribute("data-delete-row-year");
+    const monthIdx = Number(this.getAttribute("data-delete-row-month"));
+    deleteSeriesMonthRow(key, year, monthIdx);
+  }));
+
+  wrap.querySelectorAll(".year-delete-btn").forEach(btn=>btn.addEventListener("click", function(){
+    const key = this.getAttribute("data-delete-year-key");
+    const year = this.getAttribute("data-delete-year");
+    deleteSeriesYear(key, year);
   }));
 }
 
