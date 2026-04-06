@@ -1259,8 +1259,19 @@ function mergeMonthArraysSum(targetMonths, addMonths){
   });
   return out;
 }
+function swapStandaloneMonthsForSeries(months){
+  return (months || blankSimpleMonths()).map(m => ({
+    roomRevenue: m.roomRevenue || 0,
+    roomNights: m.roomNights || 0,
+    fbRevenue: m.fbRevenue || 0,
+    fbpp: m.blockAdr || 0,
+    blockAdr: m.fbpp || 0
+  }));
+}
 function mergeQueuedGroupIntoSeries(group){
   const corpId = group.corporateId ? effectiveCorporateId(group.corporateId) : "";
+  const seriesCurrentMonths = swapStandaloneMonthsForSeries(group.currentMonths || blankSimpleMonths());
+  const seriesLyMonths = swapStandaloneMonthsForSeries(group.lyMonths || blankSimpleMonths());
   let existingKey = Object.keys(seriesStore).find(k => String(seriesStore[k].corporateId||"") === String(corpId||""));
   if(!existingKey){
     const key = (corpId || "NOID") + "__" + (group.name || "Serie");
@@ -1270,8 +1281,8 @@ function mergeQueuedGroupIntoSeries(group){
       corporateId: corpId,
       currentYear: group.currentYear || "",
       lyYear: group.lyYear || "",
-      currentMonths: JSON.parse(JSON.stringify(group.currentMonths || blankSimpleMonths())),
-      lyMonths: JSON.parse(JSON.stringify(group.lyMonths || blankSimpleMonths()))
+      currentMonths: JSON.parse(JSON.stringify(seriesCurrentMonths)),
+      lyMonths: JSON.parse(JSON.stringify(seriesLyMonths))
     };
     return;
   }
@@ -1300,8 +1311,8 @@ function mergeQueuedGroupIntoSeries(group){
       target.lyMonths = mergeMonthArraysSum(target.lyMonths, monthsArr);
     }
   };
-  applyYear(group.currentYear, group.currentMonths || []);
-  applyYear(group.lyYear, group.lyMonths || []);
+  applyYear(group.currentYear, seriesCurrentMonths);
+  applyYear(group.lyYear, seriesLyMonths);
   if(corpId) target.corporateId = corpId;
 }
 function rebuildStoreWithMergedCorporateIds(){
