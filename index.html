@@ -709,19 +709,21 @@ function buildExtraMonthlySummary(store){
     ly:{roomRevenue:0,roomNights:0,fbRevenue:0,blockAdrSum:0,fbppSum:0,count:0}
   }));
   entries.forEach(g=>{
-    (g.currentMonths||[]).forEach((m,idx)=>{
-      out[idx].cur.roomRevenue += m.roomRevenue||0;
-      out[idx].cur.roomNights += m.roomNights||0;
-      out[idx].cur.fbRevenue += m.fbRevenue||0;
-      if(m.blockAdr||m.roomNights){ out[idx].cur.blockAdrSum += m.blockAdr||0; out[idx].cur.count += 1; }
-      if(m.fbpp||m.roomNights) out[idx].cur.fbppSum += m.fbpp||0;
-    });
-    (g.lyMonths||[]).forEach((m,idx)=>{
-      out[idx].ly.roomRevenue += m.roomRevenue||0;
-      out[idx].ly.roomNights += m.roomNights||0;
-      out[idx].ly.fbRevenue += m.fbRevenue||0;
-      if(m.blockAdr||m.roomNights){ out[idx].ly.blockAdrSum += m.blockAdr||0; out[idx].ly.count += 1; }
-      if(m.fbpp||m.roomNights) out[idx].ly.fbppSum += m.fbpp||0;
+    monthNames.forEach((_, idx) => {
+      const m26 = getGroupValueForYearMonth(g, "2026", idx);
+      const m25 = getGroupValueForYearMonth(g, "2025", idx);
+
+      out[idx].cur.roomRevenue += m26.roomRevenue||0;
+      out[idx].cur.roomNights += m26.roomNights||0;
+      out[idx].cur.fbRevenue += m26.fbRevenue||0;
+      if(m26.blockAdr||m26.roomNights){ out[idx].cur.blockAdrSum += m26.blockAdr||0; out[idx].cur.count += 1; }
+      if(m26.fbpp||m26.roomNights) out[idx].cur.fbppSum += m26.fbpp||0;
+
+      out[idx].ly.roomRevenue += m25.roomRevenue||0;
+      out[idx].ly.roomNights += m25.roomNights||0;
+      out[idx].ly.fbRevenue += m25.fbRevenue||0;
+      if(m25.blockAdr||m25.roomNights){ out[idx].ly.blockAdrSum += m25.blockAdr||0; out[idx].ly.count += 1; }
+      if(m25.fbpp||m25.roomNights) out[idx].ly.fbppSum += m25.fbpp||0;
     });
   });
   out.forEach(m=>{
