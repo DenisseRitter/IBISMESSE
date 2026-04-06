@@ -1470,26 +1470,36 @@ function moveGroupBackToQueue(type, key){
   const store = type === "OT" ? otGroupStore : osGroupStore;
   const row = store[key];
   if(!row) return;
-  const totalsCur = simpleMonthsTotals(row.currentMonths || []);
-  const totalsLy = simpleMonthsTotals(row.lyMonths || []);
-  queuedGroups.push({
-    queueId: uniqueId("queue"),
-    name: row.name || "",
-    originalName: row.name || "",
-    importYear: row.currentYear || row.lyYear || "",
-    importMonth: getImportMonthLabelFromMonths((row.currentMonths || []).some(m => (m.roomRevenue||0)!==0 || (m.roomNights||0)!==0 || (m.fbRevenue||0)!==0 || (m.blockAdr||0)!==0 || (m.fbpp||0)!==0) ? row.currentMonths : row.lyMonths),
-    corporateId: row.corporateId || "",
-    groupType: type,
-    currentYear: row.currentYear || "",
-    lyYear: row.lyYear || "",
-    currentMonths: (row.currentMonths || blankSimpleMonths()).map(m => ({...m})),
-    lyMonths: (row.lyMonths || blankSimpleMonths()).map(m => ({...m})),
-    totals: {
-      roomRevenue:(totalsCur.roomRevenue||0)+(totalsLy.roomRevenue||0),
-      roomNights:(totalsCur.roomNights||0)+(totalsLy.roomNights||0),
-      fbRevenue:(totalsCur.fbRevenue||0)+(totalsLy.fbRevenue||0)
-    }
-  });
+  if(row.sources && row.sources.length){
+    row.sources.forEach(src => {
+      queuedGroups.push(cloneSourceGroup({
+        ...src,
+        queueId: uniqueId("queue"),
+        groupType: type
+      }));
+    });
+  }else{
+    const totalsCur = simpleMonthsTotals(row.currentMonths || []);
+    const totalsLy = simpleMonthsTotals(row.lyMonths || []);
+    queuedGroups.push({
+      queueId: uniqueId("queue"),
+      name: row.name || "",
+      originalName: row.name || "",
+      importYear: row.currentYear || row.lyYear || "",
+      importMonth: getImportMonthLabelFromMonths((row.currentMonths || []).some(m => (m.roomRevenue||0)!==0 || (m.roomNights||0)!==0 || (m.fbRevenue||0)!==0 || (m.blockAdr||0)!==0 || (m.fbpp||0)!==0) ? row.currentMonths : row.lyMonths),
+      corporateId: row.corporateId || "",
+      groupType: type,
+      currentYear: row.currentYear || "",
+      lyYear: row.lyYear || "",
+      currentMonths: (row.currentMonths || blankSimpleMonths()).map(m => ({...m})),
+      lyMonths: (row.lyMonths || blankSimpleMonths()).map(m => ({...m})),
+      totals: {
+        roomRevenue:(totalsCur.roomRevenue||0)+(totalsLy.roomRevenue||0),
+        roomNights:(totalsCur.roomNights||0)+(totalsLy.roomNights||0),
+        fbRevenue:(totalsCur.fbRevenue||0)+(totalsLy.fbRevenue||0)
+      }
+    });
+  }
   delete store[key];
   saveQueuedGroups();
   if(type === "OT") saveOtGroupStore();
@@ -1667,6 +1677,90 @@ function renderSeriesBlocks(){
   }));
 }
 
+
+function cloneSourceGroup(group){
+  return {
+    queueId: group.queueId || uniqueId("src"),
+    name: group.name || "Unbenannte Gruppe",
+    originalName: group.originalName || group.name || "Unbenannte Gruppe",
+    corporateId: group.corporateId || "",
+    groupType: group.groupType || "",
+    importYear: group.importYear || group.currentYear || group.lyYear || "",
+    importMonth: group.importMonth || getImportMonthLabelFromMonths(group.currentMonths || group.lyMonths || []),
+    currentYear: group.currentYear || "",
+    lyYear: group.lyYear || "",
+    currentMonths: JSON.parse(JSON.stringify(group.currentMonths || blankSimpleMonths())),
+    lyMonths: JSON.parse(JSON.stringify(group.lyMonths || blankSimpleMonths())),
+    totals: JSON.parse(JSON.stringify(group.totals || {}))
+  };
+}
+function aggregateStandaloneSources(sources, fallbackName, fallbackCorp){
+  const result = {
+    name: fallbackName || "Unbenannte Gruppe",
+    corporateId: fallbackCorp || "",
+    currentYear: "",
+    lyYear: "",
+    currentMonths: blankSimpleMonths(),
+    lyMonths: blankSimpleMonths()
+  };
+  if(!sources || !sources.length) return result;
+  const years = Array.from(new Set(sources.flatMap(src => [String(src.currentYear||""), String(src.lyYear||"")]).filter(Boolean))).sort((a,b)=>Number(b)-Number(a));
+  const currentYear = years[0] || "";
+  const lyYear = years[1] || "";
+  result.currentYear = currentYear;
+  result.lyYear = lyYear;
+  const currentParts = sources.flatMap(src => {
+    const arr = [];
+    if(String(src.currentYear||"") === currentYear) arr.push(src.currentMonths || blankSimpleMonths());
+    if(String(src.lyYear||"") === currentYear) arr.push(src.lyMonths || blankSimpleMonths());
+    return arr;
+  });
+  const lyParts = sources.flatMap(src => {
+    const arr = [];
+    if(lyYear){
+      if(String(src.currentYear||"") === lyYear) arr.push(src.currentMonths || blankSimpleMonths());
+      if(String(src.lyYear||"") === lyYear) arr.push(src.lyMonths || blankSimpleMonths());
+    }
+    return arr;
+  });
+  function combineParts(parts){
+    const out = blankSimpleMonths();
+    for(let idx=0; idx<12; idx++){
+      const monthParts = parts.map(p => (p||[])[idx] || blankSeriesMonth()).filter(monthHasValues);
+      if(!monthParts.length) continue;
+      out[idx] = {
+        roomRevenue: monthParts.reduce((a,m)=>a+(m.roomRevenue||0),0),
+        roomNights: monthParts.reduce((a,m)=>a+(m.roomNights||0),0),
+        fbRevenue: monthParts.reduce((a,m)=>a+(m.fbRevenue||0),0),
+        fbpp: monthParts.reduce((a,m)=>a+(m.fbpp||0),0) / monthParts.length,
+        blockAdr: monthParts.reduce((a,m)=>a+(m.blockAdr||0),0) / monthParts.length
+      };
+    }
+    return out;
+  }
+  result.currentMonths = combineParts(currentParts);
+  result.lyMonths = combineParts(lyParts);
+  return result;
+}
+function ensureStandaloneSources(entry){
+  if(entry.sources && entry.sources.length) return entry.sources;
+  entry.sources = [cloneSourceGroup({
+    name: entry.name,
+    originalName: entry.name,
+    corporateId: entry.corporateId,
+    currentYear: entry.currentYear,
+    lyYear: entry.lyYear,
+    currentMonths: entry.currentMonths,
+    lyMonths: entry.lyMonths,
+    totals: {
+      ...simpleMonthsTotals(entry.currentMonths || []),
+      fbpp:0,
+      blockAdr:0
+    }
+  })];
+  return entry.sources;
+}
+
 function findStoreEntryByIdentity(store, group){
   return Object.keys(store).find(key => {
     const g = store[key];
@@ -1677,39 +1771,32 @@ function mergeStandaloneGroupIntoStore(store, group){
   const corpId = group.corporateId ? effectiveCorporateId(group.corporateId) : "";
   const normalized = {...group, corporateId:corpId};
   let existingKey = findStoreEntryByIdentity(store, normalized);
+  const sourceClone = cloneSourceGroup(normalized);
   if(!existingKey){
     const key = uniqueId(corpId ? ("grp_"+corpId) : "grp");
+    const aggregated = aggregateStandaloneSources([sourceClone], normalized.name || "Unbenannte Gruppe", corpId);
     store[key] = {
       key,
-      name: normalized.name || "Unbenannte Gruppe",
-      corporateId: corpId,
-      currentYear: normalized.currentYear || "",
-      lyYear: normalized.lyYear || "",
-      currentMonths: JSON.parse(JSON.stringify(normalized.currentMonths || blankSimpleMonths())),
-      lyMonths: JSON.parse(JSON.stringify(normalized.lyMonths || blankSimpleMonths()))
+      name: aggregated.name,
+      corporateId: aggregated.corporateId,
+      currentYear: aggregated.currentYear,
+      lyYear: aggregated.lyYear,
+      currentMonths: aggregated.currentMonths,
+      lyMonths: aggregated.lyMonths,
+      sources: [sourceClone]
     };
     return;
   }
   const target = store[existingKey];
-  const targetCur = Number(target.currentYear || 0);
-  const entryCur = Number(normalized.currentYear || 0);
-  if(String(target.currentYear||"") === String(normalized.currentYear||"")){
-    target.currentMonths = normalized.currentMonths.map(m => ({...m}));
-    if(normalized.lyYear){
-      target.lyYear = normalized.lyYear;
-      target.lyMonths = normalized.lyMonths.map(m => ({...m}));
-    }
-  }else if(entryCur > targetCur){
-    target.lyYear = target.currentYear || "";
-    target.lyMonths = JSON.parse(JSON.stringify(target.currentMonths || blankSimpleMonths()));
-    target.currentYear = normalized.currentYear || target.currentYear;
-    target.currentMonths = normalized.currentMonths.map(m => ({...m}));
-  }else{
-    target.lyYear = normalized.currentYear || target.lyYear;
-    target.lyMonths = normalized.currentMonths.map(m => ({...m}));
-  }
-  target.name = normalized.name || target.name;
-  target.corporateId = corpId || target.corporateId;
+  const sources = ensureStandaloneSources(target);
+  sources.push(sourceClone);
+  const aggregated = aggregateStandaloneSources(sources, normalized.name || target.name, corpId || target.corporateId);
+  target.name = aggregated.name;
+  target.corporateId = aggregated.corporateId;
+  target.currentYear = aggregated.currentYear;
+  target.lyYear = aggregated.lyYear;
+  target.currentMonths = aggregated.currentMonths;
+  target.lyMonths = aggregated.lyMonths;
 }
 function getImportMonthLabelFromMonths(months){
   const labels = (months || []).map((m, idx) => {
@@ -1781,7 +1868,7 @@ function renderQueue(){
   const body = document.getElementById("queueBody");
   if(!body) return;
   if(!queuedGroups.length){
-    body.innerHTML = `<tr><td colspan="11" class="left"><span class="group-empty">Keine offenen Gruppen in der Ablage.</span></td></tr>`;
+    body.innerHTML = `<tr><td colspan="12" class="left"><span class="group-empty">Keine offenen Gruppen in der Ablage.</span></td></tr>`;
     renderQueueSelectionSummary();
     return;
   }
