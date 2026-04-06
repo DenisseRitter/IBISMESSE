@@ -2237,32 +2237,60 @@ function parseHotelyText(text){
 }
 function mergeImport(parsed){
   if(!parsed || !parsed.seriesEntries) return;
+
+  function importedCurrentMonths(entry){
+    return (entry.months || []).map(m => ({...(m.cur || {})}));
+  }
+  function mergeImportedMonthsReplacingSameMonth(existingMonths, incomingMonths){
+    const out = Array.from({length:12}, (_, idx) => ({...((existingMonths || [])[idx] || blankSeriesMonth())}));
+    (incomingMonths || []).forEach((m, idx) => {
+      if(idx < 0 || idx > 11 || !monthHasValues(m)) return;
+      out[idx] = {...blankSeriesMonth(), ...m};
+    });
+    return out;
+  }
+
   parsed.seriesEntries.forEach(entry => {
     const corpId = effectiveCorporateId(entry.corporateId || ("NOID_"+entry.series));
+    const incomingMonths = importedCurrentMonths(entry);
     let existingKey = Object.keys(seriesStore).find(k => seriesStore[k].corporateId === corpId);
     if(!existingKey){
       const key = corpId + "__" + entry.series;
-      seriesStore[key] = { key, series: entry.series, corporateId: corpId, currentYear: entry.year, lyYear: "", currentMonths: entry.months.map(m => ({...m.cur})), lyMonths: blankMonths().map(m => ({...m.cur})) };
+      seriesStore[key] = {
+        key,
+        series: entry.series,
+        corporateId: corpId,
+        currentYear: entry.year,
+        lyYear: "",
+        currentMonths: mergeImportedMonthsReplacingSameMonth(blankSimpleMonths(), incomingMonths),
+        lyMonths: blankSimpleMonths()
+      };
       return;
     }
     const target = seriesStore[existingKey];
     if(String(target.currentYear || "") === String(entry.year || "")){
       target.series = entry.series || target.series;
       target.currentYear = entry.year || target.currentYear;
-      target.currentMonths = entry.months.map(m => ({...m.cur}));
+      target.currentMonths = mergeImportedMonthsReplacingSameMonth(target.currentMonths || blankSimpleMonths(), incomingMonths);
+      return;
+    }
+    if(String(target.lyYear || "") === String(entry.year || "")){
+      target.lyYear = entry.year || target.lyYear;
+      target.lyMonths = mergeImportedMonthsReplacingSameMonth(target.lyMonths || blankSimpleMonths(), incomingMonths);
+      target.series = entry.series || target.series;
       return;
     }
     const targetCurrent = Number(target.currentYear || 0);
     const incomingYear = Number(entry.year || 0);
     if(incomingYear > targetCurrent){
       target.lyYear = target.currentYear || "";
-      target.lyMonths = (target.currentMonths || blankMonths().map(m=>({...m.cur}))).map(m => ({...m}));
+      target.lyMonths = (target.currentMonths || blankSimpleMonths()).map(m => ({...m}));
       target.currentYear = entry.year || target.currentYear;
-      target.currentMonths = entry.months.map(m => ({...m.cur}));
+      target.currentMonths = mergeImportedMonthsReplacingSameMonth(blankSimpleMonths(), incomingMonths);
       target.series = entry.series || target.series;
     } else {
       target.lyYear = entry.year || target.lyYear;
-      target.lyMonths = entry.months.map(m => ({...m.cur}));
+      target.lyMonths = mergeImportedMonthsReplacingSameMonth(target.lyMonths || blankSimpleMonths(), incomingMonths);
     }
   });
   saveStore();
