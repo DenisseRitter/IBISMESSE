@@ -699,25 +699,34 @@ function buildMonthlySummary(){
 }
 function buildExtraMonthlySummary(store){
   const entries = storeValues(store);
-  const out = monthNames.map((name,idx)=>({
+  const out = monthNames.map((name,idx)=>(
+    {
     month:name, idx,
     cur:{roomRevenue:0,roomNights:0,fbRevenue:0,blockAdrSum:0,fbppSum:0,count:0},
     ly:{roomRevenue:0,roomNights:0,fbRevenue:0,blockAdrSum:0,fbppSum:0,count:0}
   }));
   entries.forEach(g=>{
-    (g.currentMonths||[]).forEach((m,idx)=>{
-      out[idx].cur.roomRevenue += m.roomRevenue||0;
-      out[idx].cur.roomNights += m.roomNights||0;
-      out[idx].cur.fbRevenue += m.fbRevenue||0;
-      if(m.blockAdr||m.roomNights){ out[idx].cur.blockAdrSum += m.blockAdr||0; out[idx].cur.count += 1; }
-      if(m.fbpp||m.roomNights) out[idx].cur.fbppSum += m.fbpp||0;
-    });
-    (g.lyMonths||[]).forEach((m,idx)=>{
-      out[idx].ly.roomRevenue += m.roomRevenue||0;
-      out[idx].ly.roomNights += m.roomNights||0;
-      out[idx].ly.fbRevenue += m.fbRevenue||0;
-      if(m.blockAdr||m.roomNights){ out[idx].ly.blockAdrSum += m.blockAdr||0; out[idx].ly.count += 1; }
-      if(m.fbpp||m.roomNights) out[idx].ly.fbppSum += m.fbpp||0;
+    out.forEach((row, idx) => {
+      const m26 = getGroupValueForYearMonth(g, "2026", idx) || {};
+      const m25 = getGroupValueForYearMonth(g, "2025", idx) || {};
+
+      row.cur.roomRevenue += m26.roomRevenue || 0;
+      row.cur.roomNights += m26.roomNights || 0;
+      row.cur.fbRevenue += m26.fbRevenue || 0;
+      if((m26.blockAdr||0) || (m26.roomNights||0)){
+        row.cur.blockAdrSum += m26.blockAdr || 0;
+        row.cur.count += 1;
+      }
+      if((m26.fbpp||0) || (m26.roomNights||0)) row.cur.fbppSum += m26.fbpp || 0;
+
+      row.ly.roomRevenue += m25.roomRevenue || 0;
+      row.ly.roomNights += m25.roomNights || 0;
+      row.ly.fbRevenue += m25.fbRevenue || 0;
+      if((m25.blockAdr||0) || (m25.roomNights||0)){
+        row.ly.blockAdrSum += m25.blockAdr || 0;
+        row.ly.count += 1;
+      }
+      if((m25.fbpp||0) || (m25.roomNights||0)) row.ly.fbppSum += m25.fbpp || 0;
     });
   });
   out.forEach(m=>{
@@ -1065,6 +1074,31 @@ function buildPivotEntities(){
   pushGroupTotals();
   return entities;
 }
+function getAvailableDashboardYears(){
+  const years = new Set();
+  seriesData.forEach(s => {
+    if(s.currentYear) years.add(String(s.currentYear));
+    if(s.lyYear) years.add(String(s.lyYear));
+  });
+  [otGroupStore, osGroupStore].forEach(store => {
+    storeValues(store).forEach(g => {
+      if(g.currentYear) years.add(String(g.currentYear));
+      if(g.lyYear) years.add(String(g.lyYear));
+    });
+  });
+  return Array.from(years).filter(Boolean).sort((a,b)=>Number(b)-Number(a));
+}
+function getPivotDisplayYearLabel(){
+  const years = getAvailableDashboardYears();
+  const curYear = years[0] || String(currentYear || "");
+  const lyYear = years[1] || (curYear && !Number.isNaN(Number(curYear)) ? String(Number(curYear) - 1) : "");
+  if(pivotState.yearMode === "ly") return lyYear || curYear || "";
+  if(pivotState.yearMode === "diff" || pivotState.yearMode === "pct"){
+    if(curYear && lyYear) return `${curYear} vs ${lyYear}`;
+    return curYear || "";
+  }
+  return curYear || "";
+}
 function renderPivot(){
   updateSeriesModeOptions();
   const sourceSel = document.getElementById("pivotSourceMode");
@@ -1072,6 +1106,7 @@ function renderPivot(){
   const thead = document.querySelector("#pivotTable thead");
   const tbody = document.querySelector("#pivotTable tbody");
   const entities = buildPivotEntities();
+  const pivotYearLabel = getPivotDisplayYearLabel();
 
   if(pivotState.viewMode === "monthsSeries"){
     thead.innerHTML = `<tr><th class="left">${metricLabel(pivotState.metric)}</th>${entities.map(s=>`<th>${escapeHtml(s.label)}</th>`).join("")}</tr>`;
@@ -1080,10 +1115,10 @@ function renderPivot(){
         const val = getMetricNumeric(s.months[idx], pivotState.metric, pivotState.yearMode);
         return `<td class="mono">${formatMetricValue(val, pivotState.metric, pivotState.yearMode)}</td>`;
       }).join("");
-      return `<tr><td class="left"><strong>${m} ${currentYear||""}</strong></td>${cells}</tr>`;
+      return `<tr><td class="left"><strong>${m} ${pivotYearLabel}</strong></td>${cells}</tr>`;
     }).join("");
   } else {
-    thead.innerHTML = `<tr><th class="left">Bereich</th>${monthNames.map(m=>`<th>${m} ${currentYear||""}</th>`).join("")}</tr>`;
+    thead.innerHTML = `<tr><th class="left">Bereich</th>${monthNames.map(m=>`<th>${m} ${pivotYearLabel}</th>`).join("")}</tr>`;
     tbody.innerHTML = entities.map(s => {
       const cells = s.months.map(monthObj => {
         const val = getMetricNumeric(monthObj, pivotState.metric, pivotState.yearMode);
